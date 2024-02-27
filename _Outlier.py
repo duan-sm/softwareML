@@ -111,7 +111,7 @@ def Outlier(self
             # self.ui.ResultsText1.append('%s无异常值' % col[i_index[i]].split('\n')[0])
             self.ui.ResultsText1.append('%s No outliers' % col[i_index[i]].split('\n')[0])
             continue
-        if len(self.index_[i]) < len_data * 0.01:
+        if len(self.index_[i]):
             self.ui.ResultsText1.append('\n')
             self.ui.ResultsText1.append(' ' * 5 + '*' * 5)
             # self.ui.ResultsText1.append('%s的异常值数量为：%d' % (col[i_index[i]].split('\n')[0], len(self.index_[i])))
@@ -133,9 +133,10 @@ def Outlier(self
         for j in in_:
             num += j[1] - j[0] + 1
             adjust_index.extend(self.index_[i][j[0]:j[1] + 1])
+        self.ui.ResultsText1.append('The original quantity %d ' % (len(self.index_[i])))
         self.index_[i] = adjust_index
         # self.ui.ResultsText1.append('原来数量%d,变为%d' % (len(self.index_[i]), num))
-        self.ui.ResultsText1.append('The original quantity %d becomes %d' % (len(self.index_[i]), num))
+        self.ui.ResultsText1.append('becomes %d' % (num))
 
     # 统计一共有多少个点
     list_ = self.index_[0]
@@ -145,7 +146,7 @@ def Outlier(self
     # self.ui.ResultsText1.append('原始异常点数据量共：%d' % len(data))
     self.ui.ResultsText1.append('-' * 5 + ' CONCLUSION ' + '-' * 5)
     # self.ui.ResultsText1.append('原始异常点数据量共：%d' % len(data))
-    self.ui.ResultsText1.append('Total number of outliers data: %d' % len(data))
+    self.ui.ResultsText1.append('Total number of outliers data: %d' % len(list_))
     list_ = np.sort(list(set(list_)))
     # self.ui.ResultsText1.append('修正后异常点数量共：%d' % len(np.sort(list(set(list_)))))
     self.ui.ResultsText1.append('Total number of outliers after correction: %d' % len(np.sort(list(set(list_)))))
@@ -238,7 +239,7 @@ def OutlierDraw(self
         if self.ui.DataOutlierDraw1.isChecked():
             ax1.plot(self.workbook.iloc[fea_index, index].values, np.arange(len(fea_index)), 'r-',
                      label=fea)
-            ax1.scatter(self.workbook.iloc[ab_point[0], index].values, np.arange(len(ab_point[0])),
+            ax1.scatter(self.workbook.iloc[ab_point[0], index].values, ab_point[0],
                         c='b', label='Outliers')
             # self.ui.Results2.setText('%s:序号为%d，异常点数量为%d; 井深%.2f-%.2f' % (
             #     col[judge_var_index].split('\n')[0], index, len(ab_point[0]), SMD, EMD))
@@ -262,6 +263,7 @@ def OutlierDraw(self
         # ax1.invert_yaxis()
         ax1.tick_params(width=bwith, length=bwith * 2, labelsize=fontsize, direction='in')
         eval('self.ui.%s.figure.tight_layout()' % vvv)
+        eval('self.ui.%s.figure.canvas.draw()' % vvv)
     # self.ui.Results2.setText('%s绘图完成' % self.workbook.columns[index].split('\n')[0])
     self.ui.Results2.setText('%s draw is completed' % self.workbook.columns[index].split('\n')[0])
     print('ab_point')
@@ -276,7 +278,6 @@ def OutlierDraw(self
     print(np.array(count_point))
     print(col[judge_var_index], )
     print(self.ui.DataOutlierDraw1.isChecked())
-
     # if self.size_ == 0:
     #     qwer = '井深\nm'
     # else:

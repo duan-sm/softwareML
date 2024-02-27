@@ -409,7 +409,8 @@ class MainWindow(QMainWindow):
                 cols = ''
                 for i in columns[-4:-1]:
                     cols = cols + str(i) + ','
-                self.ui.VariableOutput.setText(cols)
+                # self.ui.VariableOutput.setText(cols)
+                self.ui.VariableOutput.setText('stress0, stress1, stress2')
                 print('columns[-4:-1]', columns[-4:-1])
             else:
                 self.ui.VariableOutput.clear()

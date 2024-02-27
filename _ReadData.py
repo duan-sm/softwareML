@@ -336,7 +336,7 @@ def btnSaveData(self):
         self.ui.InputDataTableView.resizeRowsToContents()
         self.ui.InputDataTableView.resizeColumnsToContents()
         # 初始化可以选择绘制的特征
-        for num in range(1, 5):
+        for num in range(2, 5):
             eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
             eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # 清除图表
 

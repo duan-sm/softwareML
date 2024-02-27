@@ -31,21 +31,26 @@ def chi2Btn(self):
     for i in range(len(data_cols_sim)):
         if i == index:
             continue
-        # print('i=',i)
-        kf = chi2_contingency([self.workbook.iloc[:, i].values, self.workbook.iloc[:, index].values])
-        # print('kf=',kf)
-        # self.ui.ResultsText2.append('特征*%s*与特征*%s*的卡方检验结果为：'
-        #                             % (data_cols_sim[i], data_cols_sim[index]))
-        self.ui.ResultsText2.append('The chi-square test results of feature *%s* and feature *%s* are:'
-                                    % (data_cols_sim[i], data_cols_sim[index]))
-        # print('kf=')
+        print('i=',i)
+        try:
+            print('chi2_contingency')
+            kf = chi2_contingency([self.workbook.iloc[:, i].values, self.workbook.iloc[:, index].values])
+            print('kf=',kf)
+            # self.ui.ResultsText2.append('特征*%s*与特征*%s*的卡方检验结果为：'
+            #                             % (data_cols_sim[i], data_cols_sim[index]))
+            self.ui.ResultsText2.append('The chi-square test results of feature *%s* and feature *%s* are:'
+                                        % (data_cols_sim[i], data_cols_sim[index]))
+            # print('kf=')
 
-        '''后面取消'''
-        # self.ui.ResultsText2.append('卡方值=%.4f, P值=%.4f, 自由度=%i'
-        #                             % (kf[0],kf[1],kf[2]))
-        self.ui.ResultsText2.append('Chi-square value=%.4f, P value=%.4f, degrees of freedom=%i'
-                                    % (kf[0], kf[1], kf[2]))
-        self.ui.ResultsText2.append('\n')
+            '''后面取消'''
+            # self.ui.ResultsText2.append('卡方值=%.4f, P值=%.4f, 自由度=%i'
+            #                             % (kf[0],kf[1],kf[2]))
+            self.ui.ResultsText2.append('Chi-square value=%.4f, P value=%.4f, degrees of freedom=%i'
+                                        % (kf[0], kf[1], kf[2]))
+            self.ui.ResultsText2.append('\n')
+        except:
+            print('except')
+            self.ui.ResultsText2.append('COME TO NOTHING: All values in "observed" must be nonnegative.')
     self.ui.ResultsText2.append(' ' * 10 + '-' * 10 + ' ' * 10)
 
 
