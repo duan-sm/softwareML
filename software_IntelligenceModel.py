@@ -67,6 +67,7 @@ class MainWindow(QMainWindow):
         self.ui.Test.setEnabled(False)
         self.ui.DrawSliceT.setEnabled(False)
         self.ui.ModelTypeSelect.setCurrentIndex(0)
+        self.ui.Model_tab.setCurrentIndex(0)
     @pyqtSlot(int)
     def on_tabWidget_currentChanged(self):
         print('on_tabWidget_currentChanged')
