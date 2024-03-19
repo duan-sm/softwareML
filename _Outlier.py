@@ -78,14 +78,15 @@ def Outlier(self
               , original_data
               , path):
     '''
+    The modified 3 sigma is used to determine outliers for each feature in the data.
     异常值处理
-    :param original_data: 存储录井数据的DataFrame
-    :param path: 分析结束后保存分析结果DataFrame
-    :return: 删除异常值后的结果
+    :param original_data: The DataFrame that stores the logging data 存储录井数据的DataFrame
+    :param path: Save the analysis DataFrame after the analysis is complete 分析结束后保存分析结果DataFrame
+    :return: Result after the outlier is deleted 删除异常值后的结果
     '''
     print('Outlier is processing')
     data = original_data.copy()
-    # 异常值处理与可视化
+    # Outlier processing and visualization 异常值处理与可视化
     col = data.columns
     i_index = []
     self.index_ = []
@@ -94,15 +95,15 @@ def Outlier(self
         _ = threesigma(data[col[i]]
                        , detail=False
                        , results_s='a'
-                       , n=3)
+                       , n=3) # 3 Sigma outlier screening 3西格玛异常值筛选
         out_index = _[-1]
         i_index.append(i)
-        # 所有的异常索引存储
+        # All abnormal indexes are stored 所有的异常索引存储
         self.index_.append(out_index)
-    print('初始异常点计算结束')
+    print('The initial outlier calculation is complete') # 初始异常点计算结束
     print(' ' * 5 + '*' * 5)
 
-    # 对异常点数量进行统计
+    # The number of outliers is counted 对异常点数量进行统计
     for i in range(len(self.index_)):
         print(i_index[i], col[i_index[i]])
         len_data = len(data)
@@ -119,6 +120,7 @@ def Outlier(self
                 'The number of outliers in %s is: %d' % (col[i_index[i]].split('\n')[0], len(self.index_[i])))
     data_copy_ = np.array(data.values)
 
+    # Print the number of outliers in ResultsText1 在ResultsText1中打印异常点数量情况
     for i in range(len(self.index_)):
         if len(self.index_[i]) == 0:
             continue
@@ -127,6 +129,8 @@ def Outlier(self
         # self.ui.ResultsText1.append('序号%d特征：%s，异常值数量变化情况:' % (i, col[i_index[i]].split('\n')[0]))
         self.ui.ResultsText1.append(
             'Serial number %d feature: %s, changes in the number of outliers:' % (i, col[i_index[i]].split('\n')[0]))
+        # Use the find_discontinue_data function to find and correct for continuous outliers
+        # 使用find_discontinue_data函数查找连续的异常点，并进行修正
         _, in_ = find_discontinue_data(self.index_[i], data_long=10, ind_=True)
         num = 0
         adjust_index = []
@@ -168,6 +172,9 @@ def Outlier(self
 def OutlierDraw(self
                   , index
                   , path):
+    '''
+    Plots values and outliers for selected features.
+    '''
     bwith = 1
     fontsize = 13
     print('开始绘图')

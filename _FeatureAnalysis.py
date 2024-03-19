@@ -24,6 +24,10 @@ from PyQt5.QtWidgets import QMessageBox
 
 
 def chi2Btn(self):
+    '''
+    卡方检验计算函数,利用卡方检验分析特征间的联系。
+    Chi-square test is used to analyze the relationship between features.
+    '''
     index = self.ui.SelectFeature3.currentIndex()
     print('*index' * 10)
     data_cols_sim = np.array([i.split('\n')[0] for i in self.workbook.columns])
@@ -55,6 +59,10 @@ def chi2Btn(self):
 
 
 def mutualInforBtn(self):
+    '''
+    利用互信息方法分析特征间的联系。
+    The relationship between features is analyzed by mutual information method.
+    '''
     index = self.ui.SelectFeature3.currentIndex()
     data_cols_sim = np.array([i.split('\n')[0] for i in self.workbook.columns])
     for i in range(len(data_cols_sim)):
@@ -67,6 +75,10 @@ def mutualInforBtn(self):
 
 
 def DimenComBtn(self):
+    '''
+    The principal component analysis is used to process the data and reduce the data dimension. (Processed data will lose its physical meaning)
+    利用主成分分析处理数据，降低数据维度。（处理后的数据将会失去物理意义）
+    '''
     self.ui.DimenComBtn.setEnabled(False)
     self.ui.NondimenBtn.setEnabled(True)
     self.ui.ResultsText2.append('Because it is a regression question, this button is not enable.')
@@ -139,6 +151,9 @@ def DimenComBtn(self):
         self.ui.ResultsText2.append('Dimensionality reduction analysis is completed')
 
 def SaveData(self):
+    '''
+    The corrected data presentation will be modified
+    '''
     if self.state == 2:
         # Correlation coefficient
         self.workbook = self.workbook_
@@ -208,6 +223,10 @@ def SaveData(self):
 
 def CorrDraw(self
                , path):
+    '''
+    Pearson correlation coefficient and Spearman correlation coefficient are used to calculate the correlation coefficient between each feature.
+    利用皮尔逊相关系数和斯皮尔曼相关系数计算每个特征之间的相关系数。
+    '''
     self.state = 2
     bwith = 1
     fontsize = 13
@@ -329,10 +348,11 @@ def CorrDraw(self
 def NondimenBtn(self, original_data):
     '''
     数据无量纲化
-    :param original_data: 存储录井数据的DataFrame
-    :param s_m: 无量纲化方法，包括"M"最大最小归一化，”S“标准化
-    :param path: 分析结束后保存分析的路径
-    :return: 数据量纲后的结果
+    The data is processed without dimension. It can be divided into standardization method and maximum and minimum method
+    :param original_data: The DataFrame that stores the logging data          存储录井数据的DataFrame
+    :param s_m: Dimensionless methods, including "M" max-min normalization, "S" standardization          无量纲化方法，包括"M"最大最小归一化，”S“标准化
+    :param path: Save the analysis path after the analysis is complete            分析结束后保存分析的路径
+    :return: The result after the data dimension        数据量纲后的结果
     '''
     index = self.ui.DimensionlessType.currentIndex()
     fangfa = ['Standard', 'MaxMin']

@@ -25,19 +25,22 @@ from tensorflow.python.keras.models import load_model
 from tensorflow.python.keras.optimizer_v1 import Adam, SGD, RMSprop, Adadelta, Adagrad
 from tensorflow.python.keras.callbacks import ModelCheckpoint
 
+
 def initial(self):
+    '''
+    useless
+    '''
     try:
+        # Print the current page index 打印当前页面索引
         index = self.ui.tabWidget.currentIndex()
-        print('index=',index)
+        print('index=', index)
         if index == 3:
             print('111')
-
-
             print('222')
 
             self.ui.Results3.setText('Label has been selected')
             for num in range(2, 5):
-                print('num=',num)
+                print('num=', num)
                 eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
                 eval('self.ui.SelectFeature%d.addItems(columns[:-4])' % num)  # 清除图表
             '''
@@ -76,7 +79,14 @@ def initial(self):
         self.ui.ResultsText1.append('Please input the data')
         self.ui.ResultsText2.append('Please input the data')
 
+
 def Initialize(self):
+    '''
+    由于智能模型参数较多，通过此函数可以快速初始化模型的参数（初始参数只作为参考，并不一定适用于当前数据）
+    Since there are many parameters of the intelligent model, the parameters of the model can be
+     quickly initialized through this function (the initial parameters are only for reference and
+     are not necessarily applicable to the current data).
+    '''
     if self.ui.ModelTypeSelect.currentIndex() == 0:
         self.ui.ANN_layers.setText('100')
         self.ui.ANN_dropout.setText('0.2')
@@ -95,7 +105,12 @@ def Initialize(self):
     else:
         pass
 
+
 def get_optimizer(optimizer_name, lr):
+    '''
+    Return to the optimizer based on the interface selection
+    根据界面的选择返回优化器
+    '''
     if optimizer_name == 'adam':
         return tf.keras.optimizers.Adam(lr)
     elif optimizer_name == 'adadelta':
@@ -107,7 +122,12 @@ def get_optimizer(optimizer_name, lr):
     elif optimizer_name == 'sgd':
         return tf.keras.optimizers.SGD(lr)
 
+
 def get_loss(loss_name, y_true, y_pre):
+    '''
+    According to the selection of the interface, select the loss value calculation method to return the loss value
+    根据界面的选择选定损失值计算方法返回损失值
+    '''
     if loss_name == 'mse':
         loss_ = tf.reduce_mean(tf.losses.mse(y_true, y_pre))
         return loss_
@@ -124,13 +144,22 @@ def get_loss(loss_name, y_true, y_pre):
         loss_ = tf.reduce_mean(tf.losses.binary_crossentropy(y_true, y_pre))
         return loss_
 
+
 def draw_LossFig(self
                  , train_loss
                  , valid_loss):
+    '''
+    绘制损失值结果曲线
+    Plot the loss value result curve
+    :param self: class
+    :param train_loss: Training set loss value 训练集损失值
+    :param valid_loss: Validation set loss value 验证集损失值
+    :return: none
+    '''
     bwith = 1
     fontsize = 13
     # print('|1'*10)
-    self.ui.LossFig.figure.clear()  # 清除图表
+    self.ui.LossFig.figure.clear()  # Clear chart 清除图表
     font_ = {
         'family': 'Times New Roman'
         , 'weight': 'normal'
@@ -156,7 +185,7 @@ def draw_LossFig(self
         , 'weight': 'normal'
         , 'size': fontsize
     }
-    ax1.legend(loc="best", prop=font1, framealpha =0)
+    ax1.legend(loc="best", prop=font1, framealpha=0)
     points_num = 10
     # print('|3' * 10)
     x1_label = ax1.get_xticklabels()
@@ -183,12 +212,18 @@ def draw_LossFig(self
 
 
 def sequences_from_indices(array, indices_ds, start_index, end_index):
+    '''
+    获得序列索引
+    Obtain sequence index
+    '''
     dataset = tf.data.Dataset.from_tensors(array[start_index:end_index])
     dataset = tf.data.Dataset.zip((dataset.repeat(), indices_ds)).map(
         lambda steps, inds: tf.gather(steps, inds),
         num_parallel_calls=tf.data.AUTOTUNE,
     )
     return dataset
+
+
 # workbook = pd.read_excel(r'E:/Software-Duan/dist/test_data.xlsx',index_col=0)
 # print(workbook)
 def timeseries_dataset_from_array(
@@ -201,9 +236,25 @@ def timeseries_dataset_from_array(
         shuffle=False,
         seed=None,
         start_index=None,
-        end_index=None,):
+        end_index=None, ):
     '''
-    transfer data to time array
+    Convert non-time series to time series data
+    将非时间序列转化为时间序列数据
+    :param data: Represents x data, each of which is called a timestep.表示x数据，里面的每个叫做一个timestep。
+    :param targets: indicates the y label. If you do not process labels and only process data, pass targets=None.表示x数据，里面的每个叫做一个timestep。
+    :param sequence_length: The length of an output sequence sequence, that is, how many timesteps there are.一个输出序列sequence的长度，即有多少个timestep。
+    :param sequence_stride: The beginning of each sequence is separated by several timesteps. 每个sequence的开头相隔几个timestep。
+    For stride s, output samples would start at index data[i], data[i + s], data[i + 2 * s], etc.
+    :param sampling_rate: Sampling frequency of timestep in a sequence.  每个sequence的开头相隔几个timestep。
+    For rate r, timesteps data[i], data[i + r], … data[i + sequence_length] are used for create a sample sequence.
+    :param batch_size: Because tf.data.Dataset is returned, batch is set. 因为返回是tf.data.Dataset，所以要设定分批。
+    :param shuffle: Boolean value: indicates whether to shuffle the generated data set (random rearrangement). The default is False.布尔值，表示是否对生成的数据集进行洗牌（随机重排）。默认为False。
+    :param seed: Random number seed. 随机数种子
+    :param start_index: an integer that indicates the time index from which the time window is created. The default value is 0, which means that it starts with the first timestamp.
+    整数，表示从输入数据的哪个时间索引开始创建时间窗口。默认为0，表示从第一个时间戳开始。
+    :param end_index: an integer that indicates the time at which the index ends the creation time window. The default is None, which means until the end of the last timestamp.
+    整数，表示在输入数据的哪个时间索引结束创建时间窗口。默认为None，表示直到最后一个时间戳结束。
+    :return: Time series data set. 时间序列数据集
     '''
     # Validate strides
     if sampling_rate <= 0:
@@ -278,7 +329,7 @@ def timeseries_dataset_from_array(
             num_parallel_calls=tf.data.AUTOTUNE,
         )
         target_ds = sequences_from_indices(
-            targets, indices, start_index+sequence_length-1, end_index+sequence_length-1
+            targets, indices, start_index + sequence_length - 1, end_index + sequence_length - 1
         )
         dataset = tf.data.Dataset.zip((dataset, target_ds))
     dataset = dataset.prefetch(tf.data.AUTOTUNE)
@@ -297,14 +348,26 @@ def MyBP(self, x_train, y_train, x_test, y_test
          , units=[100], dropout=0.2, activation='relu'
          , loss='mape', optimizer='adam', epochs=100
          , lr=0.01, batch_num=3000, style=1):
-    """
+    '''
+    A multi-layer BP neural network model is established.
     建立三层BP神经网络模型。
-    :param units:隐藏层神经元数，默认10。
-    :param activations:激活函数，默认‘relu’。
-    :param dropout:随机失活比例，默认0.2。
-    :param lr:学习率，默认0.01。
-    :return:模型。
-    """
+    :param self: class
+    :param x_train: Model input train data 模型输入训练数据
+    :param y_train: Model input train data label 模型输入训练数据标签
+    :param x_test: Model input test data 模型输入测试数据
+    :param y_test: Model input test data label 模型输入测试数据标签
+    :param units: Network structure and neurons 网络结构与神经元
+    :param dropout: dropout
+    :param activation: Activation function 激活函数
+    :param loss: Loss function
+    :param optimizer: optimizer
+    :param epochs: Training times 训练次数
+    :param lr: Learning rate 学习率
+    :param batch_num:Batch training quantity  分批训练数量
+    :param style: Pressure-0/stress-1 压力/应力
+    :return: Trained model 训练好的模型
+    '''
+
     self.ui.LossFig.figure.clear()
     Dimen_index = self.ui.DimensionlessType.currentIndex()
     if Dimen_index == 0:
@@ -332,23 +395,23 @@ def MyBP(self, x_train, y_train, x_test, y_test
     if not os.path.exists('./res/result'):
         os.makedirs('./res/result')
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.33, random_state=42)
-    if len(x_train)<batch_num:
+    if len(x_train) < batch_num:
         batch_size = len(x_train)
     else:
-        batch_size = len(x_train)//batch_num
+        batch_size = len(x_train) // batch_num
     net_ = str(units[0])
     print('*3' * 10)
     model = Sequential()
-    print('x_train.shape',x_train.shape)
+    print('x_train.shape', x_train.shape)
     model.add(Dense(units=units[0], input_shape=(None, x_train.shape[1])
                     , activation=activation, kernel_initializer='random_uniform',
                     bias_initializer='zeros'))
     model.add(Dropout(rate=dropout))  # 防止过拟合
-    for unit in range(1,len(units)):
+    for unit in range(1, len(units)):
         model.add(Dense(units=units[unit], activation=activation, kernel_initializer='random_uniform',
                         bias_initializer='zeros'))
         model.add(Dropout(rate=dropout))  # 防止过拟合
-        net_ = net_+'_'+str(units[unit])
+        net_ = net_ + '_' + str(units[unit])
     if style == 0:
         model.add(Dense(units=1, activation='sigmoid'))
         net_ = net_ + '_' + str(1)
@@ -366,12 +429,12 @@ def MyBP(self, x_train, y_train, x_test, y_test
         #                                                                  epochs), index=False)
 
         pd.DataFrame([self.mean_, self.var_], columns=self.workbook.columns, index=['mean', 'var']).to_csv(
-                './res/model/BP+{}+{}+{}+{}+{}+standard_para.csv'.format(net_, activation, dropout, lr,
-                                                             epochs), index=False)
+            './res/model/BP+{}+{}+{}+{}+{}+standard_para.csv'.format(net_, activation, dropout, lr,
+                                                                     epochs), index=False)
     elif s_m == 'M':
         pd.DataFrame([self.data_max_, self.data_min_], columns=self.workbook.columns, index=['max', 'min']).to_csv(
             './res/model/BP+{}+{}+{}+{}+{}+maxmin_para.csv'.format(net_, activation, dropout, lr,
-                                                         epochs), index=False)
+                                                                   epochs), index=False)
     '''
     style: 1
     '''
@@ -393,10 +456,10 @@ def MyBP(self, x_train, y_train, x_test, y_test
             train_loss_bs.append(train_loss.numpy())
             opt.apply_gradients(zip(grads, model.trainable_variables))
         # 测试集
-            #             model.save(r'G:\F盘\0论文\压力信号小波分析约束下的气侵预警模型\出口流量公式'+'\\'+str(units)+'\\'+str(i)+'.h5')
+        #             model.save(r'G:\F盘\0论文\压力信号小波分析约束下的气侵预警模型\出口流量公式'+'\\'+str(units)+'\\'+str(i)+'.h5')
         train_loss_sum.append(np.mean(train_loss_bs))
         out = model(x_valid)
-        valid_loss = get_loss(loss_name=loss, y_true=y_valid, y_pre=out) # tf.reduce_mean(tf.losses.mape(y_valid, out))
+        valid_loss = get_loss(loss_name=loss, y_true=y_valid, y_pre=out)  # tf.reduce_mean(tf.losses.mape(y_valid, out))
         valid_loss_sum.append(valid_loss.numpy())
         if i % 10 == 0:
             print('The epoch of training is:%d' % i)
@@ -415,13 +478,13 @@ def MyBP(self, x_train, y_train, x_test, y_test
     draw_LossFig(self, np.array(train_loss_sum), np.array(valid_loss_sum))
     history = np.array([train_loss_sum, valid_loss_sum]).T
     pd.DataFrame(history, columns=['train_loss', 'valid_loss']).to_csv(
-            './res/history/BP+{}+{}+{}+{}+{}.csv'.format(net_, activation, dropout, lr,
-                                                             epochs), index=False)
+        './res/history/BP+{}+{}+{}+{}+{}.csv'.format(net_, activation, dropout, lr,
+                                                     epochs), index=False)
 
     print('net_=', net_)
     '''
     style: 2
-    
+
     # print('net_' ,net_)
     # model.compile(loss=loss, optimizer=optimizer, metrics=loss)
     # model.summary()
@@ -458,11 +521,11 @@ def MyBP(self, x_train, y_train, x_test, y_test
     # print('*8' * 10)
     df = pd.DataFrame()
     print('test result:')
-    print('bp_mse=%.3f, bp_mae=%.3f, bp_rmse=%.3f'%(bp_mse, bp_mae, bp_rmse))
+    print('bp_mse=%.3f, bp_mae=%.3f, bp_rmse=%.3f' % (bp_mse, bp_mae, bp_rmse))
     df['V_t'] = y_test
     method = self.ui.DimensionlessType.currentIndex()
-    if method==0:
-        y_pred = y_pred*((self.data_max_-self.data_min_))+self.data_min_
+    if method == 0:
+        y_pred = y_pred * ((self.data_max_ - self.data_min_)) + self.data_min_
     else:
         y_pred = y_pred * self.var_ + self.mean_
     df['V_p'] = y_pred
@@ -471,18 +534,18 @@ def MyBP(self, x_train, y_train, x_test, y_test
     return model
 
 
-
 def MyLSTM(self, dataset_train, dataset_valid, dataset_test
-         , units=[100], dropout=0.2
-         , loss='mape', optimizer='adam', epochs=100
-         , lr=0.01, batch_num=3000,style=1):
+           , units=[100], dropout=0.2
+           , loss='mape', optimizer='adam', epochs=100
+           , lr=0.01, batch_num=3000, style=1):
     """
-    建立三层BP神经网络模型。
-    :param units:隐藏层神经元数，默认10。
-    :param activations:激活函数，默认‘relu’。
-    :param dropout:随机失活比例，默认0.2。
-    :param lr:学习率，默认0.01。
-    :return:模型。
+    The LSTM neural network model is established.
+    建立LSTM神经网络模型。
+    :param units:Number of hidden layer neurons, default 100. 隐藏层神经元数，默认100。
+    :param activations:Activate function, default 'relu'. 激活函数，默认‘relu’。
+    :param dropout:Random inactivation ratio, default 0.2.随机失活比例，默认0.2。
+    :param lr:Learning rate, default is 0.01.学习率，默认0.01。
+    :return:Model.模型。
     """
     print('RUN myLSTM function  ')
     self.ui.LossFig.figure.clear()
@@ -505,7 +568,7 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
     # if self.state == 1:
     #     NondimenBtn(self, y_test)
     # print('*2' * 10)
-    print('myLSTM 1 '*10)
+    print('myLSTM 1 ' * 10)
     if not os.path.exists('./res/model'):
         os.makedirs('./res/model')
     if not os.path.exists('./res/history'):
@@ -520,7 +583,7 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
     # print('*3' * 10)
     print('myLSTM 2 ' * 10)
     model = Sequential()
-    if len(units)<=1:
+    if len(units) <= 1:
         # print('len(units)<1')
         # print(units)
         # for j in units:
@@ -532,16 +595,16 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
         # print(dropout)
         # print(units[0], type(units[0]), (inputs.shape[1], inputs.shape[2]),dropout)
         model.add(LSTM(units=units[0], input_shape=(inputs.shape[1], inputs.shape[2]), dropout=dropout
-                        , kernel_initializer='random_uniform', bias_initializer='zeros'))
+                       , kernel_initializer='random_uniform', bias_initializer='zeros'))
         # print('model.add LSTM')
     else:
         print('len(units)>1')
         print(units)
         model.add(LSTM(units=units[0], input_shape=(inputs.shape[1], inputs.shape[2]), dropout=dropout
                        , kernel_initializer='random_uniform', bias_initializer='zeros', return_sequences=True))
-        for unit in range(1, len(units)-1):
+        for unit in range(1, len(units) - 1):
             model.add(LSTM(units=units[unit], dropout=dropout
-                       , kernel_initializer='random_uniform', bias_initializer='zeros', return_sequences=True))
+                           , kernel_initializer='random_uniform', bias_initializer='zeros', return_sequences=True))
             net_ = net_ + '_' + str(units[unit])
         model.add(LSTM(units=units[-1], dropout=dropout
                        , kernel_initializer='random_uniform', bias_initializer='zeros'))
@@ -560,11 +623,11 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
     if s_m == 'S':
         pd.DataFrame([self.mean_, self.var_], columns=self.workbook.columns, index=['mean', 'var']).to_csv(
             './res/model/LSTM+{}+{}+{}+{}+standard_para.csv'.format(net_, dropout, lr,
-                                                                     epochs), index=False)
+                                                                    epochs), index=False)
     elif s_m == 'M':
         pd.DataFrame([self.data_max_, self.data_min_], columns=self.workbook.columns, index=['max', 'min']).to_csv(
             './res/model/LSTM+{}+{}+{}+{}+maxmin_para.csv'.format(net_, dropout, lr,
-                                                                   epochs), index=False)
+                                                                  epochs), index=False)
     '''
     style: 1
     '''
@@ -577,15 +640,15 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
     point_num = 1
     opt = get_optimizer(optimizer, lr)
     for i in range(epochs):
-        print('epoch=%d'%i)
+        print('epoch=%d' % i)
         for bs in range(batch_num):
-            print('bs=',bs)
+            print('bs=', bs)
             print('batch_num=', batch_num)
             for batch in dataset_train.take(bs + 1):
                 inputs, targets = batch
             with tf.GradientTape() as tape:
                 predict = model(inputs)
-                train_loss =get_loss(loss_name=loss, y_true=targets, y_pre=predict)
+                train_loss = get_loss(loss_name=loss, y_true=targets, y_pre=predict)
             grads = tape.gradient(train_loss, model.trainable_variables)
             train_loss_bs.append(train_loss.numpy())
             opt.apply_gradients(zip(grads, model.trainable_variables))
@@ -619,7 +682,7 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
     draw_LossFig(self, np.array(train_loss_sum), np.array(valid_loss_sum))
     history = np.array([train_loss_sum, valid_loss_sum]).T
     pd.DataFrame(history, columns=['train_loss', 'valid_loss']).to_csv(
-        './res/history/LSTM+{}+{}+{}+{}.csv'.format(net_, dropout, lr,epochs), index=False)
+        './res/history/LSTM+{}+{}+{}+{}.csv'.format(net_, dropout, lr, epochs), index=False)
 
     print('net_=', net_)
     print('myLSTM 5 ' * 10)
@@ -663,18 +726,23 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
 
 
 def Compute(self):
+    '''
+    将数据以7:3分为验证集与训练集。按照设定参数进行模型训练与验证。
+    The data is divided into validation set and training set by 7:3.
+    The model is trained and verified according to the set parameters.
+    '''
     activation_dict = {
-        0:'relu'
-        ,1:'tanh'
-        ,2:'sigmoid'
-        ,3:'softmax'
+        0: 'relu'
+        , 1: 'tanh'
+        , 2: 'sigmoid'
+        , 3: 'softmax'
     }
     optimizer_dict = {
         0: 'adam'
         , 1: 'adadelta'
         , 2: 'adagrad'
         , 3: 'rmsprop'
-        , 4:'sgd'
+        , 4: 'sgd'
     }
     loss_dict = {
         0: 'mse'
@@ -684,7 +752,7 @@ def Compute(self):
         , 4: 'binary crossentropy'
     }
     index = self.ui.ModelTypeSelect.currentIndex()
-    if index==0:
+    if index == 0:
         try:
             units = []
             layers = self.ui.ANN_layers.text()
@@ -699,7 +767,7 @@ def Compute(self):
                 units.append(int(pre_units[i]))
             self.ui.Results3.setText('Parameter input is correct, the model is working')
             units = np.array(units)
-            if units[-1]==3:
+            if units[-1] == 3:
                 units = units[:-1]
             activation = activation_dict[activation_index]
             optimizer = optimizer_dict[optimizer_index]
@@ -710,7 +778,7 @@ def Compute(self):
         except:
             self.ui.Results3.setText('Please input the correct model parameters')
             return 0
-    elif index==1:
+    elif index == 1:
         try:
             units = []
             layers = self.ui.LSTM_layers.text()
@@ -724,7 +792,7 @@ def Compute(self):
                 units.append(int(pre_units[i]))
             self.ui.Results3.setText('Parameter input is correct, the model is working')
             units = np.array(units)
-            if units[-1]==3:
+            if units[-1] == 3:
                 units = units[:-1]
 
             optimizer = optimizer_dict[optimizer_index]
@@ -740,22 +808,22 @@ def Compute(self):
 
     style = self.ui.Style1.currentIndex()
     try:
-        if index==0:
+        if index == 0:
             if style == 0:
                 all_data = self.workbook.values
                 x_data = all_data[:, :4]
-                y_data = self.workbook.loc[:, 'p'].values.reshape((len(all_data),1))
+                y_data = self.workbook.loc[:, 'p'].values.reshape((len(all_data), 1))
             else:
                 all_data = self.workbook.values
-                x_data = all_data[:,:4]
-                y_data = all_data[:,4:-1]
+                x_data = all_data[:, :4]
+                y_data = all_data[:, 4:-1]
             x_train, x_test, y_train, y_test = train_test_split(x_data, y_data
                                                                 , test_size=0.33, random_state=42, shuffle=True)
-            print('*1'*10)
+            print('*1' * 10)
             MyBP(self, x_train, y_train, x_test, y_test
                  , units=units, dropout=dropout, activation=activation
                  , loss=loss, optimizer=optimizer, epochs=epochs
-                 , lr=lr, batch_num=3000,style=style)
+                 , lr=lr, batch_num=3000, style=style)
             # the batch_num is different from LSTM
             # this means the size of batch
         elif index == 1:
@@ -763,7 +831,7 @@ def Compute(self):
             if style == 0:
                 all_data = self.workbook.values
                 x_data = all_data[:, :4]
-                y_data = self.workbook.loc[:, 'p'].values.reshape((len(all_data),1))
+                y_data = self.workbook.loc[:, 'p'].values.reshape((len(all_data), 1))
             else:
                 all_data = self.workbook.values
                 x_data = all_data[:, :4]
@@ -783,7 +851,7 @@ def Compute(self):
                 batch_num = len(y_train) // batch_size
             else:
                 batch_num = len(y_train) // batch_size + 1
-            print('y_train=',len(y_train))
+            print('y_train=', len(y_train))
             print('batch_num=', batch_num)
             dataset_train = timeseries_dataset_from_array(
                 x_train,
@@ -810,14 +878,12 @@ def Compute(self):
                 batch_size=len(y_test) + 1,
             )
             MyLSTM(self, dataset_train, dataset_valid, dataset_test
-                 , units=units, dropout=dropout
-                 , loss=loss, optimizer=optimizer, epochs=epochs
-                 , lr=lr, batch_num=batch_num,style=style)
+                   , units=units, dropout=dropout
+                   , loss=loss, optimizer=optimizer, epochs=epochs
+                   , lr=lr, batch_num=batch_num, style=style)
             print('*2' * 10)
     except:
         self.ui.Results3.setText('Something is wrong, you should have a change')
-
-
 
 
 r'''

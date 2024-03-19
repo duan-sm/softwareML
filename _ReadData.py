@@ -9,6 +9,29 @@
 @Software: PyCharm
 """
 
+def rotate_point(x, y, z, angle_degrees):
+    # 将角度转换为弧度
+    angle_rad = np.radians(angle_degrees)
+
+    # 定义旋转矩阵
+#     rotation_matrix = np.array([
+#         [np.cos(angle_rad), -np.sin(angle_rad), 0],
+#         [np.sin(angle_rad), np.cos(angle_rad), 0],
+#         [0, 0, 1]
+#     ])
+    rotation_matrix = np.array([
+        [np.cos(angle_rad), 0, np.sin(angle_rad)],
+        [0,1,0],
+        [-np.sin(angle_rad), 0, np.cos(angle_rad)]
+    ])
+
+    # 构建坐标点向量
+    original_point = np.array([x, y, z])
+
+    # 进行矩阵乘法，得到旋转后的坐标点
+    rotated_point = np.dot(rotation_matrix, original_point)
+
+    return rotated_point
 
 import os
 import numpy as np
@@ -19,23 +42,28 @@ from PyQt5.QtCore import Qt
 import math
 from FunctionDataPreprocessing import draw_cross_curves
 def DataInputBtn(self):
+    '''
+    It will open the file selection screen, read the selected file and display it.
+    它将会打开文件选择界面，在选定文件后读取文件并展示。
+    '''
     print('DataInputBtn|'*10)
+    # Re-read the data and clear the previous contents 重新读取数据，清空之前的内容
     self.ui.NondimenBtn.setEnabled(True)
     self.ui.DimenComBtn.setEnabled(True)
     self.ui.NondimenBtn.setEnabled(True)
-    self.ui.FeatureFig.figure.clear()  # 清除图表
+    self.ui.FeatureFig.figure.clear()  # 清除图表 Clear Figure
     self.ui.FeatureFig.figure.clf()
     # self.ui.FeatureFig.figure.cla()
-    self.ui.OtherFig.figure.clear()  # 清除图表
+    self.ui.OtherFig.figure.clear()  # 清除图表 Clear Figure
     self.ui.OtherFig.figure.clf()
     # self.ui.OtherFig.figure.cla()
-    self.ui.FeatureFig2.figure.clear()  # 清除图表
+    self.ui.FeatureFig2.figure.clear()  # 清除图表 Clear Figure
     self.ui.FeatureFig2.figure.clf()
     # self.ui.FeatureFig2.figure.cla()
-    self.ui.Fig3.figure.clear()  # 清除图表
+    self.ui.Fig3.figure.clear()  # 清除图表 Clear Figure
     self.ui.Fig3.figure.clf()
     # self.ui.Fig3.figure.cla()
-    self.ui.LossFig.figure.clear()  # 清除图表
+    self.ui.LossFig.figure.clear()  # 清除图表 Clear Figure
     self.ui.LossFig.figure.clf()
     # self.ui.LossFig.figure.cla()
     self.ui.ResultsText1.clear()
@@ -71,6 +99,7 @@ def DataInputBtn(self):
         return 0
     # if not os.path.isdir(self.Wellname):
     #     os.mkdir(self.Wellname)
+    # Example Create a data save path 创建数据保存路径
     if not os.path.exists(r'./%s'%self.Wellname):
         os.makedirs(r'./%s'%self.Wellname)
     # if not os.path.isdir(self.Wellname):
@@ -79,6 +108,7 @@ def DataInputBtn(self):
     #                                        , '数据文件(*.csv *.xlsx *.xls)'
     #                                        )
     print('1|' * 10)
+    # Open the Select file window 打开选择文件窗口
     fname, _ = QFileDialog.getOpenFileName(self, 'Open file', '.'
                                            , 'Data file(*.csv *.xlsx *.xls)'
                                            )
@@ -89,7 +119,7 @@ def DataInputBtn(self):
         if fname:
             self.ui.InputDataTableView.clearContents()
             print('fname', fname)
-            # 打开文件
+            # Open csv file 打开csv文件
             if fname[-3:]=='csv':
                 self.filetype = '.csv'
                 self.workbook = pd.read_csv(fname
@@ -104,7 +134,7 @@ def DataInputBtn(self):
                     self.workbook = self.workbook.iloc[:, 1:]
                 # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
-            elif fname[-3:]=='lsx':
+            elif fname[-3:]=='lsx': # Open xlsx file 打开xlsx文件
                 print('3|' * 10)
                 self.filetype = '.xlsx'
                 self.workbook = pd.read_excel(fname,index_col=index_col)
@@ -118,7 +148,7 @@ def DataInputBtn(self):
                     workbook = self.workbook.iloc[:, 1:]
                 # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
-            elif fname[-3:]=='xls':
+            elif fname[-3:]=='xls':# Open xls file 打开xls文件
                 print('3|' * 10)
                 self.filetype = '.xlsx'
                 self.workbook = pd.read_excel(fname,skiprows=1,sheet_name=0)
@@ -151,6 +181,7 @@ def DataInputBtn(self):
             # print(sheet1.nrows)
             self.ui.InputDataTableView.setRowCount(rows)
             self.ui.InputDataTableView.setColumnCount(len(columns))
+            # Set the header in the window 在窗口设置表头
             for i in range(len(columns)):
                 # print(i)
                 headerItem = QTableWidgetItem(columns[i])
@@ -158,17 +189,17 @@ def DataInputBtn(self):
                 ##  font.setBold(True)
                 font.setPointSize(18)
                 headerItem.setFont(font)
-                headerItem.setForeground(QBrush(Qt.red))  # 前景色，即文字颜色
+                headerItem.setForeground(QBrush(Qt.red))  # Foreground color, text color 前景色，即文字颜色
                 self.ui.InputDataTableView.setHorizontalHeaderItem(i, headerItem)
 
             self.ui.InputDataTableView.resizeRowsToContents()
             self.ui.InputDataTableView.resizeColumnsToContents()
-            # 初始化可以选择绘制的特征
+            # Initializing can select drawn features 初始化可以选择绘制的特征
             for num in range(2,5):
-                eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
-                eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # 清除图表
+                eval('self.ui.SelectFeature%d.clear()' % num)  # Clear chart 清除图表
+                eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # Clear chart 清除图表
 
-            # 在table中显示数据
+            # # Displays the data in a window 在窗口中显示数据
             for i in range(rows):
                 rowslist = workbook_np[i,:]  # 获取excel每行内容
                 # print(rowslist)
@@ -186,8 +217,10 @@ def DataInputBtn(self):
         self.ui.Results.setText('Something is wrong')
 
 
-
 def merge(self):
+    '''
+    Early function, can be ignored
+    '''
     self.Wellname = self.ui.WellName.text()
     if self.Wellname == '例：呼111' or self.Wellname == '请输入井号' or self.Wellname == '' or len(
             self.Wellname) < 1:
@@ -274,6 +307,9 @@ def merge(self):
         self.size_ = 0
 
 def btnDelCols(self):
+    '''
+    Delete empty column 删除空的列
+    '''
     try:
         row0, col0 = self.workbook.shape
         self.workbook = self.workbook.dropna(axis=1, how='all')
@@ -287,6 +323,9 @@ def btnDelCols(self):
         self.ui.Results.setText('Please input the data and click Delete')
 
 def btnDelRows(self):
+    '''
+        Delete empty lines 删除空的行
+    '''
     try:
         row0, col0 = self.workbook.shape
         self.workbook = self.workbook.dropna(axis=0, how='any')
@@ -300,7 +339,11 @@ def btnDelRows(self):
         self.ui.Results.setText('Please input the data and click Delete')
 
 def btnSaveData(self):
+    '''
+    The modified data is saved 保存修改后的数据
+    '''
     try:
+        # Determine data type 确定数据类型
         if self.filetype == '.csv':
             print('file style is .csv')
             self.workbook.to_csv(os.getcwd() + '\\' + self.Wellname + '\\' + '%s-0NoneNull.csv' % self.Wellname
@@ -321,6 +364,7 @@ def btnSaveData(self):
         rows, cols = workbook_np.shape
         print('行数，列数')
         print(rows, cols)
+        # Set header 设置表头
         self.ui.InputDataTableView.setRowCount(rows)
         self.ui.InputDataTableView.setColumnCount(len(columns))
         for i in range(len(columns)):
@@ -335,7 +379,7 @@ def btnSaveData(self):
 
         self.ui.InputDataTableView.resizeRowsToContents()
         self.ui.InputDataTableView.resizeColumnsToContents()
-        # 初始化可以选择绘制的特征
+        # Initializing can select drawn features 初始化可以选择绘制的特征
         for num in range(2, 5):
             eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
             eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # 清除图表
@@ -344,10 +388,10 @@ def btnSaveData(self):
             rowslist = workbook_np[i, :]  # 获取excel每行内容
             # print(rowslist)
             for j in range(len(rowslist)):
-                # 在tablewidget中添加行
+                # Add rows to the tablewidget 在tablewidget中添加行
                 row = self.ui.InputDataTableView.rowCount()
                 self.ui.InputDataTableView.insertRow(row)
-                # 把数据写入tablewidget中
+                # Write data to the tablewidget 把数据写入tablewidget中
                 newItem = QTableWidgetItem(str(rowslist[j]))
                 self.ui.InputDataTableView.setItem(i, j, newItem)
         self.ui.InputDataTableView.setAlternatingRowColors(True)
@@ -358,12 +402,18 @@ def btnSaveData(self):
 
 
 def DrawFig(self):
+    '''
+        Plot slice
+        Draws a slice of the selected location (as determined by the input page data).
+        绘制选定位置（由输入页面数据确定）的切片。
+    '''
     bwith = 1
     fontsize=13
-    self.ui.FeatureFig.figure.clear()  # 清除图表
+    self.ui.FeatureFig.figure.clear()  # Clear chart 清除图表
 
     # index = self.ui.SelectFeature1.currentIndex()
     # print('绘图 begin')
+    # Read interface parameters 读取界面参数
     length = float(self.ui.length.text())
     Angle = float(self.ui.Angle.text())
     StartBent = float(self.ui.StartBent.text())
@@ -381,7 +431,7 @@ def DrawFig(self):
     # RadiusBent = 60in/1.524m
     Region = self.ui.Region.currentIndex()
     Style = self.ui.Style0.currentIndex()
-    # baozheng canshu shuru fanwei zhengque
+    # Ensure that the parameter range is correct 保证参数输入范围正确
     if Region == 0:
         if number <= StartBent and number>=0:
             pass
@@ -418,9 +468,54 @@ def DrawFig(self):
                                           QMessageBox.Yes,
                                           defaultBtn)
             return 0
+    # split different region
 
-    # dui meiyige qiepain de dian jisuan
+    # 划分区域
+    data = self.workbook.copy(deep=True)
+    centre_point_x = StartBent
+    centre_point_y = 0
+    centre_point_z = RadiusBent
+    region0_index = np.where(data.values[:, 0] < StartBent)[0]
+    region12_index = np.where(data.values[:, 0] >= StartBent)[0]
+    region0_data = data.iloc[region0_index, :]
+    region12_data = data.iloc[region12_index, :]
+    region0_data_xyz = region0_data.iloc[:, :3].values.copy()
+    region12_data_xyz = region12_data.iloc[:, :3].values.copy()
+    # 调整原点
+    region12_data_xyz[:, 0] = region12_data_xyz[:, 0] - centre_point_x
+    region12_data_xyz[:, 2] = region12_data_xyz[:, 2] - centre_point_z
+
+    # 转化坐标
+    r = np.sqrt(region12_data_xyz[:, 0] ** 2 + region12_data_xyz[:, 1] ** 2 + region12_data_xyz[:, 2] ** 2)
+    theta = np.arccos(region12_data_xyz[:, 2] / r) / np.pi * 180
+    phi = np.arctan(region12_data_xyz[:, 1], region12_data_xyz[:, 0]) / np.pi * 180
+    region12_data['r'] = r
+    region12_data['theta'] = theta  # 调整坐标系后，角度由180开始减小
+    region12_data['phi'] = phi
+    print(np.sort(list(set(theta))))
+    # 划分区域，有个bug
+    # region 1 由于一个切片上只有两个点精确=theta（这两个点是位于圆心和中心线上的两个点）
+    # ，其他的点的theta不精确=180  因此不能找到切片
+    # 这个同样导致在region1和region2划分的时候存在问题
+    region1_index = np.where(theta > 180 - Angle)[0]
+    region2_index = np.where(theta <= 180 - Angle)[0]
+    region1_data = region12_data.iloc[region1_index, :]
+    region2_data = region12_data.iloc[region2_index, :]
+    region1_data_xyz = region1_data.iloc[:, :3].values
+    # 调整原点
+    centre_point_x2 = StartBent + RadiusBent * np.sin(Angle / 180 * np.pi)
+    centre_point_y2 = 0
+    centre_point_z2 = RadiusBent * (1 - np.cos(Angle / 180 * np.pi))
+    region2_data_xyz = region2_data.iloc[:, :3].values.copy()
+    region2_data_xyz[:, 0] = region2_data_xyz[:, 0] - centre_point_x2
+    region2_data_xyz[:, 2] = region2_data_xyz[:, 2] - centre_point_z2
+    new_point = rotate_point(region2_data_xyz[:, 0], region2_data_xyz[:, 1], region2_data_xyz[:, 2], Angle)
+    region2_data['x'] = new_point.T[:, 0]
+    region2_data['y'] = new_point.T[:, 1]
+    region2_data['z'] = new_point.T[:, 2]
+    # Calculate the points for each slice 对每一个切片的点计算
     if number<=StartBent:
+        # Region 0
         print('number<=StartBent')
         o1 = np.where(self.workbook.values[:, 0] < number + length)[0]
         o2 = np.where(self.workbook.values[:, 0] >= number)[0]
@@ -466,6 +561,7 @@ def DrawFig(self):
             stress = stress_y[new_i, :]
         z_special = 0
     elif number<=(StartBent+np.pi*RadiusBent*Angle/180):
+        # Region 1
         print('number<=(StartBent+np.pi*RadiusBent*Angle/180)')
         remain_len = number - StartBent
         sita = remain_len/(np.pi*RadiusBent) #
@@ -543,29 +639,29 @@ def DrawFig(self):
             stress = stress_y[new_i, :]
         z_special = centre_z
     # region 2
-    else:
+    else: # Region 2
         print('else')
         print('number, (StartBent + np.pi * RadiusBent * Angle / 180)')
         print(number, StartBent, np.pi, RadiusBent, Angle , 180)
         remain_len = number - (StartBent + np.pi * RadiusBent * Angle / 180)
         print('remain_len',remain_len)
         # z_real = RadiusBent + DCircle / 2
-        z_centre = RadiusBent + remain_len
-        print('z',z_centre)
-        o1 = np.where(self.workbook.values[:, 2] < z_centre+length)[0]
-        o2 = np.where(self.workbook.values[:, 2] >= z_centre)[0]
+        o1 = np.where(region2_data['x'] < remain_len+length)[0]
+        o2 = np.where(region2_data['x'] >= remain_len)[0]
         print('shape',self.workbook.values.shape)
         # print('min=%.3f,max=%.3f' % (o2, o1))
         original_position_index = []
         for point in o1:
             if point in o2:
                 original_position_index.append(point)
+        original_position_index = region2_data.iloc[original_position_index,:].index
         print(original_position_index)
-        data_ori = self.workbook.iloc[original_position_index, :]
+        data_ori = self.workbook.loc[original_position_index, :]
         x_y_z = data_ori.iloc[:, [0, 1, 2]].values
         x = x_y_z[:, 0]
         y = x_y_z[:, 1]
         z = x_y_z[:, 2]
+        z_special = centre_point_z2 + remain_len * np.sin(Angle / 180 * np.pi)
         elev = 90
         azim = 0
         # Style = pressure / stress
@@ -575,7 +671,7 @@ def DrawFig(self):
             new_index = []
             new_index_inv = []
             for i in range(len(p_y)):
-                if p_y[i, 0] < StartBent + RadiusBent:
+                if p_y[i, 2] < z_special:
                     new_index.append(i)
                 else:
                     new_index_inv.append(i)
@@ -592,7 +688,7 @@ def DrawFig(self):
             print('1'*10)
             print(stress_y.shape)
             for i in range(len(stress_y)):
-                if stress_y[i, 0] < StartBent + RadiusBent:
+                if stress_y[i, 2] < z_special:
                     new_index.append(i)
                 else:
                     new_index_inv.append(i)
@@ -601,7 +697,7 @@ def DrawFig(self):
             print('2' * 10)
             stress = stress_y[new_i, :]
             print('3' * 10)
-        z_special = z_centre
+
     # columns = [i.split('\n')[0] for i in self.workbook.columns]
     print('length', length)
     print('number', number)
@@ -667,156 +763,72 @@ def DrawFig(self):
     print('test')
     ax1 = self.ui.CurveFig.figure.add_subplot(1, 1, 1, label='plot3D')
 
-    # shujudian  paixu
+    # Data point ordering 数据点排序
     if Style==0:
-        if Region == 0 or Region == 1:
-            diyi_1 = np.where(p[:, 1] < 0)[0]
-            diyi_2 = np.where(p[:, 2] < z_special)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis1 = 180 - np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-            diyi_1 = np.where(p[:, 1] > 0)[0]
-            diyi_2 = np.where(p[:, 2] < z_special)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis2 = 180 - np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-            diyi_1 = np.where(p[:, 1] > 0)[0]
-            diyi_2 = np.where(p[:, 2] > z_special)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis3 = 180 + np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-            diyi_1 = np.where(p[:, 1] < 0)[0]
-            diyi_2 = np.where(p[:, 2] > z_special)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis4 = 180 + np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-            x_axis = np.concatenate((x_axis1, x_axis2, x_axis3, x_axis4))
+        diyi_1 = np.where(p[:, 1] < 0)[0]
+        diyi_2 = np.where(p[:, 2] < z_special)[0]
+        index = []
+        for i in diyi_1:
+            if i in diyi_2:
+                index.append(i)
+        x_axis1 = 180 - np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
+        diyi_1 = np.where(p[:, 1] > 0)[0]
+        diyi_2 = np.where(p[:, 2] < z_special)[0]
+        index = []
+        for i in diyi_1:
+            if i in diyi_2:
+                index.append(i)
+        x_axis2 = 180 - np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
+        diyi_1 = np.where(p[:, 1] > 0)[0]
+        diyi_2 = np.where(p[:, 2] > z_special)[0]
+        index = []
+        for i in diyi_1:
+            if i in diyi_2:
+                index.append(i)
+        x_axis3 = 180 + np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
+        diyi_1 = np.where(p[:, 1] < 0)[0]
+        diyi_2 = np.where(p[:, 2] > z_special)[0]
+        index = []
+        for i in diyi_1:
+            if i in diyi_2:
+                index.append(i)
+        x_axis4 = 180 + np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
+        x_axis = np.concatenate((x_axis1, x_axis2, x_axis3, x_axis4))
 
-            print('000000')
-            ax1.scatter(x_axis, p[:,3], c='r', s=1, label='Pressure')
-        else:
-            diyi_1 = np.where(p[:, 1] < 0)[0]
-            diyi_2 = np.where(p[:, 0] < StartBent + RadiusBent)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis1 = 180 - np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-            diyi_1 = np.where(p[:, 1] > 0)[0]
-            diyi_2 = np.where(p[:, 0] < StartBent + RadiusBent)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis2 = 180 - np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-            diyi_1 = np.where(p[:, 1] > 0)[0]
-            diyi_2 = np.where(p[:, 0] > StartBent + RadiusBent)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis3 = 180 + np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-            diyi_1 = np.where(p[:, 1] < 0)[0]
-            diyi_2 = np.where(p[:, 0] > StartBent + RadiusBent)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis4 = 180 + np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-            x_axis = np.concatenate((x_axis1, x_axis2, x_axis3, x_axis4))
-
-            print('000000')
-            ax1.scatter(x_axis, p[:, 3], c='r', s=1, label='Pressure')
+        print('000000')
+        ax1.scatter(x_axis, p[:,3], c='r', s=1, label='Pressure')
     elif Style==1:
-        if Region == 0 or Region == 1:
-            diyi_1 = np.where(stress[:, 1] < 0)[0]
-            diyi_2 = np.where(stress[:, 2] < z_special)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis1 = 180 - np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-            diyi_1 = np.where(stress[:, 1] > 0)[0]
-            diyi_2 = np.where(stress[:, 2] < z_special)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis2 = 180 - np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-            diyi_1 = np.where(stress[:, 1] > 0)[0]
-            diyi_2 = np.where(stress[:, 2] > z_special)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis3 = 180 + np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-            diyi_1 = np.where(stress[:, 1] < 0)[0]
-            diyi_2 = np.where(stress[:, 2] > z_special)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis4 = 180 + np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-            x_axis = np.concatenate((x_axis1, x_axis2, x_axis3, x_axis4))
-            stress_magnitude = np.sqrt(stress[:, 3]**2+stress[:, 4]**2+stress[:, 5]**2)
-            ax1.scatter(x_axis, stress_magnitude, c='b', s=1, label='wallShearStress_magnitude')
-        else:
-
-            diyi_1 = np.where(stress[:, 1] < 0)[0]
-            diyi_2 = np.where(stress[:, 0] < StartBent + RadiusBent)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis1 = 180 - np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-            print('stress[index, 1]')
-            print(stress[index, 1])
-            print('np.max(stress[:, 1])')
-            print(np.max(stress[:, 1]))
-            diyi_1 = np.where(stress[:, 1] > 0)[0]
-            diyi_2 = np.where(stress[:, 0] < StartBent + RadiusBent)[0]
-            print('*'*100)
-            print(stress[:, 1])
-            print('*' * 100)
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis2 = 180 - np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-            print('stress[index, 1]')
-            print(stress[index, 1])
-            print('np.max(stress[:, 1])')
-            print(np.max(stress[:, 1]))
-            diyi_1 = np.where(stress[:, 1] > 0)[0]
-            diyi_2 = np.where(stress[:, 0] > StartBent + RadiusBent)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis3 = 180 + np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-            print('stress[index, 1]')
-            print(stress[index, 1])
-            print('np.max(stress[:, 1])')
-            print(np.max(stress[:, 1]))
-            diyi_1 = np.where(stress[:, 1] < 0)[0]
-            diyi_2 = np.where(stress[:, 0] > StartBent + RadiusBent)[0]
-            index = []
-            for i in diyi_1:
-                if i in diyi_2:
-                    index.append(i)
-            x_axis4 = 180 + np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-            x_axis = np.concatenate((x_axis1, x_axis2, x_axis3, x_axis4))
-            stress_magnitude = np.sqrt(stress[:, 3] ** 2 + stress[:, 4] ** 2 + stress[:, 5] ** 2)
-            ax1.scatter(x_axis, stress_magnitude, c='b', s=1, label='wallShearStress_magnitude')
-
+        diyi_1 = np.where(stress[:, 1] < 0)[0]
+        diyi_2 = np.where(stress[:, 2] < z_special)[0]
+        index = []
+        for i in diyi_1:
+            if i in diyi_2:
+                index.append(i)
+        x_axis1 = 180 - np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
+        diyi_1 = np.where(stress[:, 1] > 0)[0]
+        diyi_2 = np.where(stress[:, 2] < z_special)[0]
+        index = []
+        for i in diyi_1:
+            if i in diyi_2:
+                index.append(i)
+        x_axis2 = 180 - np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
+        diyi_1 = np.where(stress[:, 1] > 0)[0]
+        diyi_2 = np.where(stress[:, 2] > z_special)[0]
+        index = []
+        for i in diyi_1:
+            if i in diyi_2:
+                index.append(i)
+        x_axis3 = 180 + np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
+        diyi_1 = np.where(stress[:, 1] < 0)[0]
+        diyi_2 = np.where(stress[:, 2] > z_special)[0]
+        index = []
+        for i in diyi_1:
+            if i in diyi_2:
+                index.append(i)
+        x_axis4 = 180 + np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
+        x_axis = np.concatenate((x_axis1, x_axis2, x_axis3, x_axis4))
+        stress_magnitude = np.sqrt(stress[:, 3]**2+stress[:, 4]**2+stress[:, 5]**2)
+        ax1.scatter(x_axis, stress_magnitude, c='b', s=1, label='wallShearStress_magnitude')
     print('111111')
     print('x', x_axis)
     ax1.set_xlabel('x axis (Angle)', fontsize=fontsize)
@@ -871,7 +883,9 @@ def DrawFig(self):
     #                   )
 
 def DrawWholePipe(self):
-
+    '''
+    Draw the center curve of the pipe 绘制管道中心曲线
+    '''
     print('DrawWholePipe')
     print('1'*20)
     bwith = 1
@@ -880,6 +894,7 @@ def DrawWholePipe(self):
     print('2' * 20)
     # index = self.ui.SelectFeature1.currentIndex()
     # print('绘图 begin')
+    # Read interface input 读取界面输入
     length = float(self.ui.length.text())
     Angle = float(self.ui.Angle.text())
     StartBent = float(self.ui.StartBent.text())
@@ -899,6 +914,7 @@ def DrawWholePipe(self):
     # RadiusBent = 60in/1.524m
     Region = self.ui.Region.currentIndex()
     Style = self.ui.Style0.currentIndex()
+    # Determine whether the plot area and the input data range are reasonable 确定绘图区域与输入数据范围是否合理
     if Region == 0:
         if number <= StartBent and number >= 0:
             pass
@@ -935,7 +951,7 @@ def DrawWholePipe(self):
                                           QMessageBox.Yes,
                                           defaultBtn)
             return 0
-
+    # Calculate the key parameters of the pipeline 计算管线的关键参数
     # StartBent = 240in/6.096m
     # Angle=90
     # DCircle = 30in/0.762m
@@ -954,7 +970,7 @@ def DrawWholePipe(self):
     y = np.zeros(all_points)
     z = np.zeros(all_points)
     for i in range(1, all_points):
-        #
+        # Calculate the coordinates of each point 计算每个点的坐标
         if i <= StartBent_point:
             print(i)
             x[i] = x[i - 1] + length
@@ -971,7 +987,7 @@ def DrawWholePipe(self):
             x[i] = x[i - 1] + np.cos(Angle / 180 * np.pi) * length
             z[i] = z[i - 1] + np.sin(Angle / 180 * np.pi) * length
 
-
+    # Draw a picture of the pipe center line 绘制管道中心线图片
     ax1 = self.ui.OtherFig.figure.add_subplot(1, 1, 1, label='plot3D',projection='3d')
     print('000000')
     ax1.plot3D(x[:StartBent_point], y[:StartBent_point], z[:StartBent_point], color='b')
@@ -983,11 +999,11 @@ def DrawWholePipe(self):
     print(x[StartBent_point:EndBent_points]
           , y[StartBent_point:EndBent_points], z[StartBent_point:EndBent_points])
     print('text???')
-    ax1.text(x[StartBent_point], y[StartBent_point], z[StartBent_point], 'Region 0 - Blue', 'x')
+    ax1.text(x[StartBent_point], y[StartBent_point], z[StartBent_point], 'Region 0 - Blue', 'x') # Annotate key points on the diagram 图上关键点标注注释
     print('text  1111')
-    ax1.text(x[EndBent_points], y[EndBent_points], z[EndBent_points], 'Region 1 - Red', 'x')
+    ax1.text(x[EndBent_points], y[EndBent_points], z[EndBent_points], 'Region 1 - Red', 'x') # Annotate key points on the diagram 图上关键点标注注释
     print('text  2222')
-    ax1.text(x[-1], y[-1], z[-1], 'Region 2 - Blue', 'x')
+    ax1.text(x[-1], y[-1], z[-1], 'Region 2 - Blue', 'x') # Annotate key points on the diagram 图上关键点标注注释
     print('111111')
     # print('x',x)
     # print('y', y)

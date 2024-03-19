@@ -30,9 +30,14 @@ https://blog.csdn.net/flyskymood/article/details/123668136
 '''
 class MainWindow(QMainWindow):
     def __init__(self, parent=None):
+        '''
+        initializaiton
+        Define the parameters of the window
+        '''
         super(MainWindow, self).__init__(parent)
         self.ui = Ui_Interface()
         self.ui.setupUi(self)
+        # Set plot parameters
         mpl.rcParams['font.sans-serif'] = ['Times New Roman']
         mpl.rcParams['font.size'] = 9  # 显示汉字
         mpl.rcParams['axes.unicode_minus'] = False  # 减号unicode编
@@ -45,13 +50,14 @@ class MainWindow(QMainWindow):
 
         # DimensionlessType = ['Standard', 'MaxMin']
         # self.ui.DimensionlessType.addItems(DimensionlessType)
-        self.size_ = 0
-        self._DimDialog=None
-        self.all_y = None
-        self.nondim = 'No'
-        self.all_y_index = None
-        self.state = -1
+        self.size_ = 0 # A variable defined earlier that represents the number of times the modified data has been saved 早期定义的变量，表示保存修改后的数据次数
+        self._DimDialog=None # A variable that records whether dimensionality has been reduced 记录是否进行了降维处理的变量
+        self.all_y = None # Save the output of the model 保存模型的输出
+        self.nondim = 'No' #A variable that records whether dimensionless processing is performed 记录是否进行了无量纲化处理的变量
+        self.all_y_index = None # Saves the index of the output of the model 保存模型的输出的索引
+        self.state = -1 # Record the status of the data 记录数据的状态
 
+        # Add a value to the interface 在界面上添加数值
         self.ui.Style0.addItems(['Pressure'])
         self.ui.Style0.addItems(['Stress'])
         self.ui.Style1.addItems(['Pressure'])
@@ -68,6 +74,7 @@ class MainWindow(QMainWindow):
         self.ui.DrawSliceT.setEnabled(False)
         self.ui.ModelTypeSelect.setCurrentIndex(0)
         self.ui.Model_tab.setCurrentIndex(0)
+    # page changed after the prompt page改变后提示
     @pyqtSlot(int)
     def on_tabWidget_currentChanged(self):
         print('on_tabWidget_currentChanged')
@@ -75,27 +82,77 @@ class MainWindow(QMainWindow):
 
 
     '''
-    ReadData_interface
+    The function in the page of 'ReadData' interface
+    It including:
+    on_DataInputBtn_clicked
+    on_merge_clicked
+    on_btnDelCols_clicked
     '''
-    # 输入数据
+    # Input data 输入数据
     @pyqtSlot(bool)
     def on_DataInputBtn_clicked(self):
         print('44444adfa dfasdf ')
+        # Read data 读取数据
         DataInputBtn(self=self)
+        # Shows the position of the maximum pressure/stress 显示最大压力/应力的位置
+        try:
+            print('111')
+            cols = self.workbook.columns
+            values = self.workbook.dropna(axis=0, how='any').values
+            if 'p' in cols:
+                cols_index = np.where('p'==cols)[0]
+            else:
+                cols_index = np.where('wallShearStress_Magnitude'==cols)[0]
+            print('222')
+            print('cols_index',cols_index)
+            val = values[:,cols_index]
+            max_val = np.max(val)
+            print('max_val',max_val)
+            index = np.where(max_val==val)[0][0]
+            print('index', index)
+            print(val.shape)
+            x = values[index, 0]
+            y = values[index, 1]
+            z = values[index, 2]
+            print('x,y,z', x,y,z)
+            print('333')
+            if 'p' in cols:
+                self.ui.max_.setText('MaxPressure: %.4f'%max_val)
+                self.ui.max_x.setText('X: %.4f' % x)
+                self.ui.max_y.setText('Y: %.4f' % y)
+                self.ui.max_z.setText('Z: %.4f' % z)
+                self.ui.Style0.setCurrentIndex(0)
+            else:
+                self.ui.max_.setText('MaxStress: %.4f' % max_val)
+                self.ui.max_x.setText('X: %.4f' % x)
+                self.ui.max_y.setText('Y: %.4f' % y)
+                self.ui.max_z.setText('Z: %.4f' % z)
+                self.ui.Style0.setCurrentIndex(1)
+            print('444')
+        except:
+            self.ui.Results.setText('Please input the data before drawing')
 
-    # 数据合并
+
     @pyqtSlot(bool)
     def on_merge_clicked(self):
+        """
+        # 数据合并
+        Early function, can be ignored
+        """
         merge(self=self)
 
 
-    # 删除列
+
     @pyqtSlot(bool)
-    def on_btn3D_clicked(self):
+    def on_btnDelCols_clicked(self):
+        '''
+        # Delete empty column 删除列
+        :return: none
+        '''
         dlgTitle = "Tips"
         strInfo = ("This processing will directly change the data content."
                    "The 'SaveData' button is used to save the result after deleting the null value and update the table data below.")
-        defaultBtn = QMessageBox.NoButton  # 缺省按钮
+        defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
         result = QMessageBox.question(self, dlgTitle, strInfo,
                                       QMessageBox.Yes,
                                       defaultBtn)
@@ -103,9 +160,13 @@ class MainWindow(QMainWindow):
         btnDelCols(self=self)
 
 
-    # 删除行
+
     @pyqtSlot(bool)
     def on_btnDelRows_clicked(self):
+        '''
+        # Delete empty rows 删除行
+        :return: none
+        '''
         dlgTitle = "Tips"
         strInfo = ("This processing will directly change the data content."
                    "The 'SaveData' button is used to save the result after deleting the null value and update the table data below.")
@@ -116,9 +177,13 @@ class MainWindow(QMainWindow):
         btnDelRows(self=self)
 
 
-    # 保存数据
+
     @pyqtSlot(bool)
     def on_btnSaveData_clicked(self):
+        '''
+        # Save data 保存数据
+        :return: none
+        '''
         btnSaveData(self=self)
 
     # 选择绘制特征
@@ -143,7 +208,7 @@ class MainWindow(QMainWindow):
     #     self.ui.tabWidget.setCurrentIndex(2)
 
 
-    # 绘图
+    # Plot slice 绘图
     @pyqtSlot(bool)
     def on_DrawSlice_clicked(self):
         try:
@@ -155,7 +220,7 @@ class MainWindow(QMainWindow):
             # self.ui.Results.setText('请输入数据后在进行绘图')
             self.ui.Results.setText('Please input the data before drawing')
 
-    # 绘图
+    # Draw the center curve of the pipe 绘制管道中心曲线
     @pyqtSlot(bool)
     def on_WholePipe_clicked(self):
         try:
@@ -170,6 +235,7 @@ class MainWindow(QMainWindow):
     '''
     Outlier_interface
     '''
+    # Display select the feature to be drawn 显示选择将要绘制的特征
     @pyqtSlot(str)
     def on_SelectFeature2_currentIndexChanged(self, curText):
         print(curText)
@@ -184,23 +250,24 @@ class MainWindow(QMainWindow):
             # self.ui.Results2.setText('请首先计算筛选异常值')
             self.ui.Results2.setText('Please calculate filter outliers first')
 
-    # 绘制异常点
+    # Set drawing outliers 绘制异常点
     @pyqtSlot()
     def on_DataOutlierDraw1_clicked(self):
         self.ui.DataOutlierDraw1.setChecked(True)
         self.ui.DataOutlierDraw2.setChecked(False)
 
-    # 不绘制异常点
+    # Set not to draw outliers 不绘制异常点
     @pyqtSlot()
     def on_DataOutlierDraw2_clicked(self):
         self.ui.DataOutlierDraw1.setChecked(False)
         self.ui.DataOutlierDraw2.setChecked(True)
 
-
+    # Return to page1 返回page1
     @pyqtSlot(bool)
     def on_Return1_clicked(self):
         self.ui.tabWidget.setCurrentIndex(0)
 
+    #Calculated outlier 计算异常点
     @pyqtSlot(bool)
     def on_computeOutlier_clicked(self):
         try:
@@ -469,6 +536,10 @@ class MainWindow(QMainWindow):
     # SelectModel
     @pyqtSlot(bool)
     def on_SelectM_clicked(self):
+        '''
+        Select the file window. Select the model to be tested.
+        选择文件窗口.选择被测试的模型。
+        '''
         try:
             self.model, _ = QFileDialog.getOpenFileName(self, 'Open file', '.'
                                                    , 'Data file(*.h5 *.m)')

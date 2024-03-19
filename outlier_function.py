@@ -15,31 +15,37 @@ def threesigma(data
                , results_s='p'
                , detail=False):
     '''
-    data：表示时间序列，包括时间和数值两列；
-    n：表示几倍的标准差
-    results_s:输出结果形式，
+    data：Represents a time series, including two columns of time and value | 表示时间序列，包括时间和数值两列；
+    n：Represents several times the standard deviation | 表示几倍的标准差
+    results_s:Output result form, | 输出结果形式，
+            "a" on behalf of all, including results, results_x, index, mintime, maxtime, outlier, outlier_x, outlier_index
+            They represent: filtered results, result time index, result sequence index,
+            Start year, end time, out-of-range value, time index of out-of-range data, and sequential index of out-of-range data
+            "p" stands for parts, including results, results_x, and index
+            [results, results_x, index]
+              *****************************************
               “a”代表全部，包括results, results_x, index,mintime,maxtime,outlier,outlier_x,outlier_index
               分别代表：筛选后的结果、结果时间索引、结果顺序索引、
                         起始年份、结束时间、超出范围的数值、超出范围数据的时间索引、超出范围数据的顺序索引
               “p”代表部分，包括results, results_x, index
-    [results, results_x, index]
+              [results, results_x, index]
     '''
-    data_x = data.index.tolist()  ##获取时间序列的时间
+    data_x = data.index.tolist()  ##Get the time of the time series | 获取时间序列的时间
     # print (data_x)
     # print ("**********",j)
-    mintime = data_x[0]  ##获取时间序列的起始年份
-    maxtime = data_x[-1]  ##获取时间序列的结束年份
+    mintime = data_x[0]  ##Gets the starting point of the time series | 获取时间序列的起始年份
+    maxtime = data_x[-1]  ##Gets the ending point of the time series | 获取时间序列的结束年份
 
-    data_y = data.values.tolist()  ##获取时间序列数值
-    ymean = np.mean(data_y)  ##求时间序列平均值
-    ystd = np.std(data_y)  ##求时间序列标准差
-    down = ymean - n * ystd  ##计算下界
-    up = ymean + n * ystd  ##计算上界
+    data_y = data.values.tolist()  ##Gets the time series value | 获取时间序列数值
+    ymean = np.mean(data_y)  ##Find the time series average | 求时间序列平均值
+    ystd = np.std(data_y)  ##Find the standard deviation of time series | 求时间序列标准差
+    down = ymean - n * ystd  ##Compute lower bound | 计算下界
+    up = ymean + n * ystd  ##Compute upper bound | 计算上界
 
-    outlier = []  # 将异常值保存
+    outlier = []  # Save the outlier | 将异常值保存
     outlier_x = []
     outlier_index = []
-    results = []  # 筛选后的结果
+    results = []  # The results after screening
     results_x = []
     index = []
     for i in range(0, len(data_y)):
@@ -52,6 +58,8 @@ def threesigma(data
             results_x.append(data_x[i])
             index.append(i)
     if detail:
+        # Test function uses code, prints variables, has no effect
+        # 测试函数使用代码，打印变量，无作用
         print('变量的名字为：', data.name)
         print('计算下界down,计算上界up:', down, up)
         print('数据的下界down,数据的上界up:', np.min(data_y), np.max(data_y))
@@ -119,8 +127,9 @@ def find_continue_data(a
                        , lag_point=None
                        , ind_=False):
     '''
+    Input one-dimensional data, look for consecutive strings of data in the data, and return the beginning and end numbers|
     输入一维数据，寻找数据中连续的数据串，返回开始和结束的数字
-    :param a: 数据
+    :param a: data | 数据
     :param data_long: 限制连续数据的长度，达到一定长度视为连续的数
     :param lag_point: 代表对于不连续的点的，设定连续长度
     比如当lag_point=4时，认为1和5为连续的
@@ -224,25 +233,26 @@ def find_discontinue_data(a
                           , lag_point=None
                           , ind_=False):
     '''
+    Input one-dimensional data, look for consecutive strings of data in the data, and return the beginning and end numbers
     输入一维数据，寻找数据中连续的数据串，返回开始和结束的数字
-    :param a: 数据
-    :param data_long: 限制连续数据的长度，达到一定长度视为连续的数
-    :param lag_point: 代表对于不连续的点的，设定连续长度
-    比如当lag_point=4时，认为1和5为连续的
-    :param ind_: 是否返回对应值的索引
-    :return: ss：不连续的索引
-            sss：不连续的索引的值
+    :param a: data | 数据
+    :param data_long: Limit the length of continuous data, up to a certain length is regarded as continuous number | 限制连续数据的长度，达到一定长度视为连续的数
+    :param lag_point: Sets the continuous length for discontinuous points | 代表对于不连续的点的，设定连续长度
+    For example, when lag_point=4, 1 and 5 are considered consecutive | 比如当lag_point=4时，认为1和5为连续的
+    :param ind_: Whether to return the index of the corresponding value | 是否返回对应值的索引
+    :return: ss：Discontinuous index | 不连续的索引
+            sss：The value of a discontinuous index | 不连续的索引的值
     '''
-
+    # Use the find_continue_data function to find continuous data | 利用find_continue_data函数查找连续的数据
     _, index_list = find_continue_data(a=a
                                        , data_long=data_long
                                        , lag_point=lag_point
                                        , ind_=True)
-    # 记录索引
+    # Record index | 记录索引
     ss = []
-    # 记录数值
+    # Record the value of index | 记录数值
     sss = []
-    # 上述表明不存在连续点，则全部点为非连续点
+    # The above indicates that there are no continuous points, then all points are discontinuous points | 上述表明不存在连续点，则全部点为非连续点
     if len(index_list) == 0:
         for i in range(len(a)):
             ss.append([i, i])
