@@ -18,6 +18,14 @@ from PyQt5.QtCore import Qt
 from tensorflow.python.keras.models import load_model
 
 def rotate_point(x, y, z, angle_degrees):
+    '''
+    Transformation of coordinate axes 坐标轴转化
+    :param x: Original X-axis data  原始x轴数据
+    :param y: Original Y-axis data  原始y轴数据
+    :param z: Original Z-axis data  原始z轴数据
+    :param angle_degrees: Rotation Angle  旋转角度
+    :return: New data  新数据
+    '''
     # Convert angles to radians 将角度转换为弧度
     angle_rad = np.radians(angle_degrees)
 
@@ -63,50 +71,16 @@ def LoadParaBtn(self):
                 self.paraData = pd.read_csv(fname
                                             , encoding='gb18030'
                                             )
-                # print(workbook.iloc[:,0].values)
-                # workbook_first_col1 = workbook.iloc[:, 0].values == np.arange(len(workbook))
-                # workbook_first_col2 = workbook.iloc[:,0].values == np.arange(1,len(workbook)+1)
-                # if sum(workbook_first_col1)==len(workbook_first_col1):
-                #     workbook = workbook.iloc[:,1:]
-                # elif sum(workbook_first_col2)==len(workbook_first_col2):
-                #     workbook = workbook.iloc[:, 1:]
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results4.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
             elif fname[-3:] == 'lsx':
                 print('3|' * 10)
                 filetype = '.xlsx'
                 self.paraData = pd.read_excel(fname, index_col=index_col)
-                # print('4|' * 10)
-                # workbook_first_col1 = workbook.iloc[:, 0].values == np.arange(len(workbook))
-                # workbook_first_col2 = workbook.iloc[:, 0].values == np.arange(1, len(workbook) + 1)
-                # print('5|' * 10)
-                # if sum(workbook_first_col1) == len(workbook_first_col1):
-                #     workbook = workbook.iloc[:, 1:]
-                # elif sum(workbook_first_col2) == len(workbook_first_col2):
-                #     workbook = workbook.iloc[:, 1:]
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results4.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
             elif fname[-3:] == 'xls':
                 print('3|' * 10)
                 filetype = '.xlsx'
                 self.paraData = pd.read_excel(fname, skiprows=1, sheet_name=0)
-                # print('4|' * 10)
-                # workbook = workbook.dropna(axis=0, how='all')
-                # col_o = workbook.columns
-                # col_c = []
-                # for i in range(len(col_o)):
-                #     str_ = ''
-                #     new_c = col_o[i].split('\n')
-                #     if len(new_c) > 1:
-                #         new_1 = str_.join(new_c[:-1])
-                #         new_2 = new_c[-1]
-                #         new_c = new_1 + '\n' + new_2
-                #         col_c.append(new_c)
-                #     else:
-                #         col_c.append(new_c[0])
-                # print('5|' * 10)
-                # workbook.columns = col_c
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results4.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
             else:
                 # self.ui.Results.setText('打开文件格式为%s，不满足要求'%(fname.split('.')[1]))
@@ -178,13 +152,6 @@ def LoadTestData(self):
             else:
                 # self.ui.Results.setText('打开文件格式为%s，不满足要求'%(fname.split('.')[1]))
                 self.ui.Results4.setText('The file format should be: xls, csv, xlsx' % (fname.split('/')[-1]))
-        # dlgTitle = "Tips"
-        # strInfo = ("You should input the Z value for the center point of the circle. "
-        #            "Otherwise, the figure will display an error..")
-        # defaultBtn = QMessageBox.NoButton  # 缺省按钮
-        # result = QMessageBox.question(self, dlgTitle, strInfo,
-        #                               QMessageBox.Yes,
-        #                               defaultBtn)
     except:
         self.ui.Results.setText('There are some mistakes about the data file.')
 
@@ -269,12 +236,10 @@ def DrawSliceT(self):
     绘制切片的模拟结果与智能模型预测结果。切片位置选择见TestDataPara框架。
     Draw the simulation results of slices and the prediction results of intelligent models.
     See TestDataPara framework for slice location selection.
-
     """
     All of the code in this section appears in _ReadData.py, so it's not commented on in detail
     此部分所有代码在_ReadData.py中均有出现，因此不加以详细注释
     """
-
     '''
     print('DrawSliceT')
     fontsize = 13

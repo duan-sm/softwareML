@@ -100,7 +100,7 @@ def Outlier(self
         i_index.append(i)
         # All abnormal indexes are stored 所有的异常索引存储
         self.index_.append(out_index)
-    print('The initial outlier calculation is complete') # 初始异常点计算结束
+    print('The initial outlier calculation is complete') # The initial outlier calculation is complete 初始异常点计算结束
     print(' ' * 5 + '*' * 5)
 
     # The number of outliers is counted 对异常点数量进行统计
@@ -142,7 +142,7 @@ def Outlier(self
         # self.ui.ResultsText1.append('原来数量%d,变为%d' % (len(self.index_[i]), num))
         self.ui.ResultsText1.append('becomes %d' % (num))
 
-    # 统计一共有多少个点
+    # Count how many points there are 统计一共有多少个点
     list_ = self.index_[0]
     for i in range(1, len(self.index_)):
         list_ = np.concatenate((list_, self.index_[i]))
@@ -174,17 +174,21 @@ def OutlierDraw(self
                   , path):
     '''
     Plots values and outliers for selected features.
+    :param self: class
+    :param index: ignore
+    :param path: Plots values and outliers for selected features.
+    :return: none
     '''
     bwith = 1
     fontsize = 13
-    print('开始绘图')
+    print('Start drawing 开始绘图')
     self.ui.StartWD.setEnabled(False)
     self.ui.EndWD.setEnabled(False)
     for vvv in ['FeatureFig2']:
     # for vvv in ['FeatureFig2', 'OtherFig']:
         eval('self.ui.%s.figure.clear()' % vvv)  # 清除图表
     index = self.ui.SelectFeature2.currentIndex()
-    print('绘图index=%d' % index)
+    print('plot(绘图)index=%d' % index)
 
     columns = [j.split('\n')[0] for j in self.workbook.columns]
     # xaxis = np.where('井深' == np.array(columns))[0][0]
@@ -226,10 +230,11 @@ def OutlierDraw(self
         print(self.index_[i])
         print(sum(self.index_[i]))
         print('='*20)
-    ab_point = find_same_diff_num(self.index_[index], fea_index)
+    ab_point = find_same_diff_num(self.index_[index], fea_index)# Look for the same and different numbers in the two lists
     # print('*' * 20)
     count_point = np.zeros(len(self.workbook))
     # print('*'*20)
+    # Whether to draw outliers 是否绘制异常点
     if len(ab_point[0]) > 0:
         count_point[ab_point[0]] = 1
         print('*' * 20)
@@ -238,7 +243,7 @@ def OutlierDraw(self
         print('-' * 20)
         self.ui.DataOutlierDraw1.setCheckable(False)
 
-    for vvv in ['FeatureFig2']:
+    for vvv in ['FeatureFig2']: # plot figure for outlier
     # for vvv in ['FeatureFig2', 'OtherFig']:
         ax1 = eval('self.ui.%s.figure.add_subplot(1, 1, 1, label=fea)' % vvv)
         print('self.ui.DataOutlierDraw1.isChecked()')
@@ -290,7 +295,7 @@ def OutlierDraw(self
     # else:
     #     qwer = '井深'
     # print(self.workbook[qwer].values)
-    print('%s修正后的异常点' % col[judge_var_index].split('\n')[0])
+    print('%s Modified outliers(修正后的异常点)' % col[judge_var_index].split('\n')[0])
     print(path)
     # draw_curve(data_copy_[:, judge_var_index]
     #            , np.array(count_point)

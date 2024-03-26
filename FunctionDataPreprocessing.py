@@ -15,51 +15,52 @@ from scipy.stats import chi2_contingency
 def mutualInfo(X, Y):
     '''
     互信息计算
-    :param X: 计算的一个变量，narray
-    :param Y: 计算的另一个变量，narray
-    :return: 互信息值
+    Mutual information computing
+    :param X: computes a variable, narray  计算的一个变量，narray
+    :param Y: computes another variable, narray        计算的另一个变量，narray
+    :return: mutual information value   互信息值
     '''
     #     X = np.asarray(data.iloc[:, 0])
     #     Y = np.asarray(data.iloc[:, 1])
-    # 使用字典统计每一个x元素出现的次数
-    d_x = dict()  # x的字典
+    # Use a dictionary to count the number of occurrences of each x element        使用字典统计每一个x元素出现的次数
+    d_x = dict()  # Dictionary of x        x的字典
     for x in X:
         if x in d_x:
             d_x[x] += 1
         else:
             d_x[x] = 1
-    # 计算每个元素出现的概率
+    # Calculate the probability of occurrence of each element      计算每个元素出现的概率
     p_x = dict()
     for x in d_x.keys():
         p_x[x] = d_x[x] / X.size
 
-    # 使用字典统计每一个y元素出现的次数
-    d_y = dict()  # y的字典
+    # Use a dictionary to count the number of occurrences of each y element     使用字典统计每一个y元素出现的次数
+    d_y = dict()  # Dictionary of y     y的字典
     for y in Y:
         if y in d_y:
             d_y[y] += 1
         else:
             d_y[y] = 1
-    # 计算每个元素出现的概率
+    # Calculate the probability of occurrence of each element        计算每个元素出现的概率
     p_y = dict()
     for y in d_y.keys():
         p_y[y] = d_y[y] / Y.size
 
-    # 使用字典统计每一个(x,y)元素出现的次数
+    # Use a dictionary to count the number of occurrences of each (x,y) element        使用字典统计每一个(x,y)元素出现的次数
     d_xy = dict()  # x的字典
     for i in range(X.size):
         if (X[i], Y[i]) in d_xy:
             d_xy[X[i], Y[i]] += 1
         else:
             d_xy[X[i], Y[i]] = 1
-    # 计算每个元素出现的概率
+    # Calculate the probability of occurrence of each element         计算每个元素出现的概率
     p_xy = dict()
     for xy in d_xy.keys():
         p_xy[xy] = d_xy[xy] / X.size
     # print(d_x, d_y, d_xy)
     # print(p_x, p_y, p_xy)
 
-    # 初始化互信息值为0
+    # Initialize the mutual information value to 0        初始化互信息值为0
     mi = 0
     for xy in p_xy.keys():
         mi += p_xy[xy] * np.log(p_xy[xy] / (p_x[xy[0]] * p_y[xy[1]]))
@@ -72,9 +73,10 @@ def chi2_mutualinfo(data
                     , feature='钻时'):
     '''
     对某个特征进行卡方检验和互信息计算
-    :param data: 存储录井数据的DataFrame
-    :param data: 特征名称
-    :return: 卡方值和互信息值
+    Chi-square test and mutual information calculation are performed for a feature
+    :param data: DataFrame for storing log data       存储录井数据的DataFrame
+    :param data: indicates the feature name          特征名称
+    :return: Chi-square value and mutual information value          卡方值和互信息值
     '''
     record = []
     data_cols_sim = np.array([_col.split('\n')[0] for _col in data.columns])
@@ -82,10 +84,16 @@ def chi2_mutualinfo(data
     for i in range(len(data_cols_sim)):
         kf = chi2_contingency([data.iloc[:, i].values, data.iloc[:, DT_index].values])
         mutual_info = mutualInfo(data.iloc[:, i].values, data.iloc[:, DT_index].values)
-        print(' ' * 10 + '\033[1;31m 特征%s与特征%s的卡方检验结果为：\033[0m' % (data_cols_sim[i], data_cols_sim[DT_index]))
-        print('卡方值=%.4f, P值=%.4f, 自由度=%i, 与原数据数组同维度的对应理论值=%s' % kf)
-        print(' ' * 10 + '\033[1;34m 特征%s与特征%s的互信息结果为：%0.4f \033[0m' % (
-        data_cols_sim[i], data_cols_sim[DT_index], mutual_info))
+        print(' ' * 10 + '\033[1;31m The chi-square test results of feature %s and feature %s are: \033[0m' % (
+        data_cols_sim[i], data_cols_sim[DT_index]))
+        print('Chi-square value =%.4f, P-value =%.4f, degrees of freedom =%i,'
+              ' corresponding theoretical values of the same dimension as the original data array' % kf)
+        print(' ' * 10 + '\033[1;34m The mutual information results of feature %s and feature %s are as follows: %0.4f \033[0m' % (
+            data_cols_sim[i], data_cols_sim[DT_index], mutual_info))
+        # print(' ' * 10 + '\033[1;31m 特征%s与特征%s的卡方检验结果为：\033[0m' % (data_cols_sim[i], data_cols_sim[DT_index]))
+        # print('卡方值=%.4f, P值=%.4f, 自由度=%i, 与原数据数组同维度的对应理论值=%s' % kf)
+        # print(' ' * 10 + '\033[1;34m 特征%s与特征%s的互信息结果为：%0.4f \033[0m' % (
+        # data_cols_sim[i], data_cols_sim[DT_index], mutual_info))
         record.append([kf[0], mutual_info])
         print(' ' * 10 + '-' * 10 + ' ' * 10)
     record = np.array(record)
@@ -96,11 +104,13 @@ def data_fusion(data
                 , data1
                 , rock_type):
     """
+    Ignore this function
     对岩性和原始数据进行融合
-    :param data: 存储录井数据的DataFrame
-    :param data1: 存储起止井深对应的岩性的DataFrame
-    :param rock_type: 岩性种类
-    :return: 融合后的数据
+    The lithology and raw data are fused
+    :param data: DataFrame for storing log data       存储录井数据的DataFrame
+    :param data1: A DataFrame that stores the lithology corresponding to the start and stop depth         存储起止井深对应的岩性的DataFrame
+    :param rock_type: lithology type    岩性种类
+    :return: indicates the merged data     融合后的数据
     """
 
     data['岩性'] = [[]] * len(data)
@@ -137,11 +147,13 @@ def data_validity(original_data
                   , path=0
                   , inplace=True):
     """
+    Ignore this function
     对数据进行准确性分析
-    :param original_data: 存储录井数据的DataFrame
-    :param path: 分析结束后保存分析结果DataFrame
-    :param path: 是否替换原始数据
-    :return: 无
+    Analyze the data for accuracy
+    :param original_data: specifies the DataFrame that stores well log data    存储录井数据的DataFrame
+    :param path: indicates the DataFrame for saving the analysis result after the analysis is complete    分析结束后保存分析结果DataFrame
+    :param path:  Whether to replace the original data     是否替换原始数据
+    :return: none无
     """
 
     data = original_data.copy()
@@ -242,12 +254,13 @@ def outlier(original_data
             , path):
     '''
     异常值处理
-    :param original_data: 存储录井数据的DataFrame
-    :param path: 分析结束后保存分析结果DataFrame
-    :return: 删除异常值后的结果
+    Outlier processing
+    :param original_data: specifies the DataFrame that stores well log data     存储录井数据的DataFrame
+    :param path: indicates the DataFrame for saving the analysis result after the analysis is complete         分析结束后保存分析结果DataFrame
+    :return: indicates the result after the outlier is deleted        删除异常值后的结果
     '''
     data = original_data.copy()
-    # 异常值处理与可视化
+    # Outlier processing and visualization     异常值处理与可视化
     col = data.columns
     i_index = []
     index_ = []
@@ -258,14 +271,14 @@ def outlier(original_data
                        , n=3)
         out_index = _[-1]
         i_index.append(i)
-        # 所有的异常索引存储
+        # All abnormal indexes are stored       所有的异常索引存储
         index_.append(out_index)
         print(col[i], len(out_index))
     print('*' * 50)
-    print('存在异常值的特征数量为%d' % len(index_))
+    print('The number of features with outliers is(存在异常值的特征数量为)%d' % len(index_))
     print('*' * 50)
 
-    # 对异常点数量进行统计
+    # The number of outliers is counted       对异常点数量进行统计
     for i in range(len(index_)):
         print(i_index[i], col[i_index[i]])
         len_data = len(data)
@@ -353,7 +366,7 @@ def outlier(original_data
                    , fig_name='%s修正后的异常点' % col[judge_var_index].split('\n')[0]
                    , path=path
                    )
-    # 统计一共有多少个点
+    # Count how many points there are  统计一共有多少个点
     list_ = index_[0]
     for i in range(1, len(index_)):
         list_ = np.concatenate((list_, index_[i]))

@@ -110,6 +110,9 @@ def get_optimizer(optimizer_name, lr):
     '''
     Return to the optimizer based on the interface selection
     根据界面的选择返回优化器
+    :param optimizer_name: Optimizer name:adam adadelta adagrad rmsprop sgd
+    :param lr: Learning rate
+    :return: optimizer
     '''
     if optimizer_name == 'adam':
         return tf.keras.optimizers.Adam(lr)
@@ -127,6 +130,10 @@ def get_loss(loss_name, y_true, y_pre):
     '''
     According to the selection of the interface, select the loss value calculation method to return the loss value
     根据界面的选择选定损失值计算方法返回损失值
+    :param loss_name: Loss function 损失函数
+    :param y_true: label 标签
+    :param y_pre: Predicted value 预测值
+    :return: Loss value 损失值
     '''
     if loss_name == 'mse':
         loss_ = tf.reduce_mean(tf.losses.mse(y_true, y_pre))
@@ -203,7 +210,8 @@ def draw_LossFig(self
     # print('|5.5' * 10)
     self.ui.LossFig.figure.tight_layout()
     # print('|6' * 10)
-    self.ui.Results3.setText('loss绘图完成')
+    self.ui.Results3.setText('loss drawing completion')
+    # self.ui.Results3.setText('loss绘图完成')
     # ax1.show()
     print('draw_LossFig|' * 10)
     self.ui.LossFig.figure.canvas.draw()
@@ -215,6 +223,13 @@ def sequences_from_indices(array, indices_ds, start_index, end_index):
     '''
     获得序列索引
     Obtain sequence index
+    :param array: dataset
+    :param indices_ds: For each initial window position, generates indices of the window elements
+    :param start_index: an integer that indicates the time index from which the time window is created. The default value is 0, which means that it starts with the first timestamp.
+    整数，表示从输入数据的哪个时间索引开始创建时间窗口。默认为0，表示从第一个时间戳开始。
+    :param end_index: an integer that indicates the time at which the index ends the creation time window. The default is None, which means until the end of the last timestamp.
+    整数，表示在输入数据的哪个时间索引结束创建时间窗口。默认为None，表示直到最后一个时间戳结束。
+    :return: dataset
     '''
     dataset = tf.data.Dataset.from_tensors(array[start_index:end_index])
     dataset = tf.data.Dataset.zip((dataset.repeat(), indices_ds)).map(
@@ -371,14 +386,14 @@ def MyBP(self, x_train, y_train, x_test, y_test
     self.ui.LossFig.figure.clear()
     Dimen_index = self.ui.DimensionlessType.currentIndex()
     if Dimen_index == 0:
-        s_m = 'S'
+        s_m = 'S' # Standard
     else:
-        s_m = 'M'
+        s_m = 'M' # MaxMin
 
     if self.state != 0 and self.state != 1:
         dlgTitle = "Tips"
         strInfo = ("Please normalize or reduce dimension.")
-        defaultBtn = QMessageBox.NoButton  # 缺省按钮
+        defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
         result = QMessageBox.question(self, dlgTitle, strInfo,
                                       QMessageBox.Yes,
                                       defaultBtn)
@@ -388,12 +403,14 @@ def MyBP(self, x_train, y_train, x_test, y_test
     # if self.state == 1:
     #     NondimenBtn(self, y_test)
     print('*2' * 10)
+    # Create a folder to save the model and results 创建保存模型和结果的文件夹
     if not os.path.exists('./res/model'):
         os.makedirs('./res/model')
     if not os.path.exists('./res/history'):
         os.makedirs('./res/history')
     if not os.path.exists('./res/result'):
         os.makedirs('./res/result')
+    # Split dataset for training and validation
     x_train, x_valid, y_train, y_valid = train_test_split(x_train, y_train, test_size=0.33, random_state=42)
     if len(x_train) < batch_num:
         batch_size = len(x_train)
@@ -401,16 +418,17 @@ def MyBP(self, x_train, y_train, x_test, y_test
         batch_size = len(x_train) // batch_num
     net_ = str(units[0])
     print('*3' * 10)
+    # Build model
     model = Sequential()
     print('x_train.shape', x_train.shape)
     model.add(Dense(units=units[0], input_shape=(None, x_train.shape[1])
                     , activation=activation, kernel_initializer='random_uniform',
                     bias_initializer='zeros'))
-    model.add(Dropout(rate=dropout))  # 防止过拟合
+    model.add(Dropout(rate=dropout))  # Prevent overfitting 防止过拟合
     for unit in range(1, len(units)):
         model.add(Dense(units=units[unit], activation=activation, kernel_initializer='random_uniform',
                         bias_initializer='zeros'))
-        model.add(Dropout(rate=dropout))  # 防止过拟合
+        model.add(Dropout(rate=dropout))  # Prevent overfitting 防止过拟合
         net_ = net_ + '_' + str(units[unit])
     if style == 0:
         model.add(Dense(units=1, activation='sigmoid'))
@@ -418,7 +436,7 @@ def MyBP(self, x_train, y_train, x_test, y_test
     else:
         model.add(Dense(units=3, activation='sigmoid'))
         net_ = net_ + '_' + str(3)
-    model.summary()
+    model.summary() # Show the structure of model
     filepath = './res/model/BP+{}+{}+{}+{}+{}.h5'.format(net_, activation, dropout, lr,
                                                          epochs)  # 保存最优权重.units+dropout+lr+act+epochs
     if s_m == 'S':
@@ -440,16 +458,16 @@ def MyBP(self, x_train, y_train, x_test, y_test
     '''
 
     COUNT = 0
-    train_loss_bs = []
-    train_loss_sum = []
-    valid_loss_sum = []
+    train_loss_bs = [] # record train loss for every batch
+    train_loss_sum = [] # record train loss of sum
+    valid_loss_sum = [] # record valid loss
     min_valid_loss = 10e8
     point_num = 1
     opt = get_optimizer(optimizer, lr)
     for i in range(epochs):
         print('-----')
         for bs in range(batch_size):
-            with tf.GradientTape() as tape:
+            with tf.GradientTape() as tape: # compute gradient
                 predict = model(x_train[bs::batch_size])
                 train_loss = get_loss(loss_name=loss, y_true=y_train[bs::batch_size], y_pre=predict)
             grads = tape.gradient(train_loss, model.trainable_variables)
@@ -458,7 +476,7 @@ def MyBP(self, x_train, y_train, x_test, y_test
         # 测试集
         #             model.save(r'G:\F盘\0论文\压力信号小波分析约束下的气侵预警模型\出口流量公式'+'\\'+str(units)+'\\'+str(i)+'.h5')
         train_loss_sum.append(np.mean(train_loss_bs))
-        out = model(x_valid)
+        out = model(x_valid) # Validate the model using validation data sets
         valid_loss = get_loss(loss_name=loss, y_true=y_valid, y_pre=out)  # tf.reduce_mean(tf.losses.mape(y_valid, out))
         valid_loss_sum.append(valid_loss.numpy())
         if i % 10 == 0:
@@ -504,7 +522,7 @@ def MyBP(self, x_train, y_train, x_test, y_test
     # print('*7' * 10)
     # 导入模型进行测试
     # start = t.perf_counter()
-    model_saved = load_model(filepath)
+    model_saved = load_model(filepath) # Save model 保存模型
     y_pred = model_saved.predict(x_test)
     # end = t.perf_counter()
     y_pred = np.array(y_pred).flatten()
@@ -539,6 +557,7 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
            , loss='mape', optimizer='adam', epochs=100
            , lr=0.01, batch_num=3000, style=1):
     """
+    The overall process is the same as MyBP function.
     The LSTM neural network model is established.
     建立LSTM神经网络模型。
     :param units:Number of hidden layer neurons, default 100. 隐藏层神经元数，默认100。
@@ -754,6 +773,7 @@ def Compute(self):
     index = self.ui.ModelTypeSelect.currentIndex()
     if index == 0:
         try:
+            # Read interface parameters 读取界面参数
             units = []
             layers = self.ui.ANN_layers.text()
             dropout = float(self.ui.ANN_dropout.text())
@@ -780,6 +800,7 @@ def Compute(self):
             return 0
     elif index == 1:
         try:
+            # Read interface parameters 读取界面参数
             units = []
             layers = self.ui.LSTM_layers.text()
             dropout = float(self.ui.LSTM_dropout.text())
@@ -809,6 +830,7 @@ def Compute(self):
     style = self.ui.Style1.currentIndex()
     try:
         if index == 0:
+            # split/read label
             if style == 0:
                 all_data = self.workbook.values
                 x_data = all_data[:, :4]
@@ -820,6 +842,7 @@ def Compute(self):
             x_train, x_test, y_train, y_test = train_test_split(x_data, y_data
                                                                 , test_size=0.33, random_state=42, shuffle=True)
             print('*1' * 10)
+            # build model
             MyBP(self, x_train, y_train, x_test, y_test
                  , units=units, dropout=dropout, activation=activation
                  , loss=loss, optimizer=optimizer, epochs=epochs
@@ -853,12 +876,13 @@ def Compute(self):
                 batch_num = len(y_train) // batch_size + 1
             print('y_train=', len(y_train))
             print('batch_num=', batch_num)
+            # Split data for LSTM
             dataset_train = timeseries_dataset_from_array(
                 x_train,
                 y_train,
-                sequence_length=sequence_length,  # 一批采集120次
+                sequence_length=sequence_length,  # Exp: One batch was collected 120 times 一批采集120次
                 sequence_stride=sequence_stride,
-                sampling_rate=step,  # 6步采集一次，即 60分钟采集一次
+                sampling_rate=step,  # Exp:Collect once in 6 steps, that is, once in 60 minutes 6步采集一次，即 60分钟采集一次
                 batch_size=batch_size,
             )
             dataset_valid = timeseries_dataset_from_array(
@@ -877,6 +901,7 @@ def Compute(self):
                 sampling_rate=step,  # 6步采集一次，即 60分钟采集一次
                 batch_size=len(y_test) + 1,
             )
+            # Build model
             MyLSTM(self, dataset_train, dataset_valid, dataset_test
                    , units=units, dropout=dropout
                    , loss=loss, optimizer=optimizer, epochs=epochs

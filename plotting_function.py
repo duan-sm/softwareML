@@ -24,6 +24,7 @@ def draw_cross_curves(data, x_=None, factor=None, picture_name=None
                       , x_label='时间', y_label='测深/m', c_=['b', 'r', 'k']
                       , linw=2, lins=['-', '-'], label=''):
     '''
+    Ignore
     绘制变量曲线
     :param data: 数据
     :param x_: x坐标轴刻度值
@@ -224,6 +225,7 @@ def draw_curve(data
                       'steelblue', 'tan', 'teal', 'firebrick']
                ):
     '''
+    Ignore
     :param data: 数据绘制曲线图
     :param K_data:绘制other中的数据
     :param other: 是否绘制其他图片
@@ -361,6 +363,7 @@ def draw_corr(data
               , draw_all = False
               , path=None):
     '''
+    Ignore
     绘制相关系数
     :param data: 输入纯数据，要求格式为DataFrame
     :param limited_corr: 绘制的相关系数阈值限制，大于阈值则显示
@@ -444,10 +447,16 @@ def PCA(data
         , path=None):
     '''
     进行PCA降维
-    :param data: 输入纯数据，要求格式为DataFrame
-    :param limited_score: 累计贡献度的下限（不应该少于第一主成分的贡献度）
-    :param path: 保存图片和分析结果的路径
+    PCA dimension reduction was performed
+    :param data: Enter pure data in the DataFrame format      输入纯数据，要求格式为DataFrame
+    :param limited_score: Lower limit of cumulative contribution (should not be less than the contribution of the first principal component)     累计贡献度的下限（不应该少于第一主成分的贡献度）
+    :param path: path to save the image and analysis results     保存图片和分析结果的路径
     :return:
+    finalData: Principal component analysis results and cumulative contribution
+    featValue: Sorts the feature values and outputs the descending order:
+    gx: Contribution of eigenvalues:
+    lg: Cumulative contribution of eigenvalues:
+
     finalData:主成分分析结果和累计贡献度
     featValue:对特征值进行排序并输出 降序:
     gx:特征值的贡献度:
@@ -456,66 +465,66 @@ def PCA(data
     df = data.copy()
     average = meanX(df)
 
-    # 查看列数和行数
+    # View the number of columns and rows  查看列数和行数
     m, n = np.shape(df)
-    print('列数:%d,行数%d' % (m, n))
+    print('columns(列数):%d,rows(行数)%d' % (m, n))
 
-    # 均值矩阵
+    # Mean value matrix 均值矩阵
     data_adjust = []
     avgs = np.tile(average, (m, 1))
-    # 去中心化
+    # decentralization 去中心化
     data_adjust = df - avgs
-    # 协方差阵
-    covX = np.cov(data_adjust.T)  # 计算协方差矩阵
+    # Covariance matrix 协方差阵
+    covX = np.cov(data_adjust.T)  # Calculate the covariance matrix 计算协方差矩阵
     # print(covX)
 
-    # 计算协方差阵的特征值和特征向量
-    featValue, featVec = np.linalg.eig(covX)  # 求解协方差矩阵的特征值和特征向量
+    # The eigenvalues and eigenvectors of the covariance matrix are calculated 计算协方差阵的特征值和特征向量
+    featValue, featVec = np.linalg.eig(covX)  # The eigenvalues and eigenvectors of the covariance matrix are solved 求解协方差矩阵的特征值和特征向量
     # print(featValue, featVec)
-    # 对特征值进行排序并输出 降序
+    # Sort the eigenvalues and output descending order 对特征值进行排序并输出 降序
     featValue = sorted(featValue)[::-1]
 
-    # 绘制散点图和折线图
-    # 同样的数据绘制散点图和折线图
+    # Draw scatter plots and line plots 绘制散点图和折线图
+    # Draw scatter plots and line plots with the same data 同样的数据绘制散点图和折线图
     plt.scatter(range(1, df.shape[1] + 1), featValue)
     plt.plot(range(1, df.shape[1] + 1), featValue)
 
-    # 显示图的标题和xy轴的名字
-    # 最好使用英文，中文可能乱码
+    # Displays the title of the graph and the name of the xy axis      显示图的标题和xy轴的名字
+    # Ignore 最好使用英文，中文可能乱码
     plt.title("Scree Plot")
     plt.xlabel("Factors")
     plt.ylabel("Eigenvalue")
 
-    plt.grid()  # 显示网格
-    plt.show()  # 显示图形
+    plt.grid()  # Display grid 显示网格
+    plt.show()  # Display graphics 显示图形
 
-    # 求特征值的贡献度
+    # Find the contribution degree of the eigenvalue 求特征值的贡献度
     gx = featValue / np.sum(featValue)
 
-    # 求特征值的累计贡献度
+    # Find the cumulative contribution degree of eigenvalues 求特征值的累计贡献度
     lg = np.cumsum(gx)
 
-    # 选出主成分
+    # Selected principal component 选出主成分
     k = [i for i in range(len(lg)) if lg[i] < limited_score]
     k = list(k)
     print(k)
 
-    # 选出主成分对应的特征向量矩阵
+    # The eigenvector matrix corresponding to the principal component is selected 选出主成分对应的特征向量矩阵
     selectVec = np.matrix(featVec.T[k]).T
     selectVe = selectVec * (-1)
     # print(selectVec)
 
-    # 主成分得分
+    # Principal component score 主成分得分
     finalData = np.dot(data_adjust, selectVec)
 
-    # 绘制热力图
+    # Mapping heat map 绘制热力图
     _ = selectVe.shape
     plt.figure(figsize=(4, 3 * _[0] / _[1]), dpi=300)
     ax = sns.heatmap(selectVec, annot=True, cmap='bwr'
-                     , fmt=".4f"  # 格式化输出图中数字，即保留小数位数等
-                     , annot_kws={'size': 8, 'weight': 'normal', 'color': '#253D24'},  # 数字属性设置，例如字号、磅值、颜色
-                     # mask=np.triu(np.ones_like(selectVec, dtype=np.bool)),  # 显示对脚线下面部分图
-                     square=True, linewidths=.5,  # 每个方格外框显示，外框宽度设置
+                     , fmt=".4f"  # Format the numbers in the output graph, that is, keep the decimal places, etc 格式化输出图中数字，即保留小数位数等
+                     , annot_kws={'size': 8, 'weight': 'normal', 'color': '#253D24'},  # Numeric property Settings, such as size, pound value, color 数字属性设置，例如字号、磅值、颜色
+                     # mask=np.triu(np.ones_like(selectVec, dtype=np.bool)),  # Displays part of the diagram below the diagonal line 显示对脚线下面部分图
+                     square=True, linewidths=.5,  # Each square frame is displayed, and the width of the outer frame is set 每个方格外框显示，外框宽度设置
                      cbar_kws={"shrink": .5})
     font2 = {
         'family': 'Times New Roman'
@@ -523,22 +532,22 @@ def PCA(data
         , 'weight': 'normal'
         , 'size': 10
     }
-    # 设置y轴字体大小
+    # Set the Y-axis font size 设置y轴字体大小
     ax.yaxis.set_tick_params(labelsize=10)
     ax.xaxis.set_tick_params(labelsize=10)
     plt.title("Factor Analysis", fontdict=font2)
 
-    # 设置y轴标签
+    # Set the Y-axis label 设置y轴标签
     plt.ylabel("Sepal Width", fontdict=font2)
     if path:
-        plt.savefig(path+r'\主成分分析特征向量矩阵.jpg'
+        plt.savefig(path+r'\Principal component analysis eigenvector matrix-主成分分析特征向量矩阵.jpg'
                    ,bbox_inches="tight")
-        pd.DataFrame(finalData).to_csv(path+r'\主成分分析结果.csv'
+        pd.DataFrame(finalData).to_csv(path+r'\Principal component analysis results-主成分分析结果.csv'
                                        , encoding='gb18030')
     else:
-        plt.savefig(r'...\主成分分析特征向量矩阵.jpg'
+        plt.savefig(r'...\Principal component analysis eigenvector matrix-主成分分析特征向量矩阵.jpg'
                     , bbox_inches="tight")
-        pd.DataFrame(finalData).to_csv(r'...\主成分分析结果.csv'
+        pd.DataFrame(finalData).to_csv(r'...\Principal component analysis results-主成分分析结果.csv'
                                        , encoding='gb18030')
 
     plt.show()

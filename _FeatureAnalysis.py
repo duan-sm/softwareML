@@ -84,7 +84,7 @@ def DimenComBtn(self):
     self.ui.ResultsText2.append('Because it is a regression question, this button is not enable.')
     return 0
     columns = np.array([i.split('\n')[0] for i in self.workbook.columns])
-    if (self._DimDialog == None):  # 未创建对话框
+    if (self._DimDialog == None):  # No dialog box created 未创建对话框
         self._DimDialog = QmyDimenDialog(self, column=columns)
     res = self._DimDialog.exec()
     if (res == QDialog.Accepted):
@@ -94,11 +94,12 @@ def DimenComBtn(self):
             self.ui.ResultsText2.append('Please re-select')
             print('*2' *10)
         else:
+            # Processed data will lose its physical meaning. So we need save some features.
             self.all_y = self.workbook.iloc[:, -4:-1].values
             self.all_y_index = self.workbook.columns[-4:-1]
             new_index = np.where(np.arange(len(columns)) != index)[0]
             print('*3' * 10)
-            for num in range(1, 5):
+            for num in range(2, 5):
                 print('num=%d'%num)
                 eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
                 eval('self.ui.SelectFeature%d.addItems(columns[new_index])' % num)  # 清除图表
@@ -121,7 +122,7 @@ def DimenComBtn(self):
             self.ui.ResultsText2.append(str(lg))
             self.ui.ResultsText2.append(' ' * 10 + '*' * 10)
             # for vvv in ['Fig3', 'OtherFig']:
-            for vvv in ['Fig3']:
+            for vvv in ['Fig3']:  # Plot figure of dimensionality reduction eigenvalue
                 eval('self.ui.%s.figure.clear()' % vvv)
                 # ax1 = eval('self.ui.%s.figure.add_subplot(1, 1, 1, label="降维特征值结果")' % vvv)
                 ax1 = eval(
@@ -167,32 +168,33 @@ def SaveData(self):
     # print(sheet1.nrows)
     self.ui.InputDataTableView.setRowCount(rows)
     self.ui.InputDataTableView.setColumnCount(len(columns))
-    for i in range(len(columns)):
+    # Show the corrected data in the QTableWidget
+    for i in range(len(columns)): # Table Title
         # print(i)
         headerItem = QTableWidgetItem(columns[i])
         font = headerItem.font()
         ##  font.setBold(True)
         font.setPointSize(18)
         headerItem.setFont(font)
-        headerItem.setForeground(QBrush(Qt.red))  # 前景色，即文字颜色
+        headerItem.setForeground(QBrush(Qt.red))  # Foreground color, text color 前景色，即文字颜色
         self.ui.InputDataTableView.setHorizontalHeaderItem(i, headerItem)
 
     self.ui.InputDataTableView.resizeRowsToContents()
     self.ui.InputDataTableView.resizeColumnsToContents()
-    # 初始化可以选择绘制的特征
-    for num in range(1, 5):
-        eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
-        eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # 清除图表
+    # Initializing can select drawn features 初始化可以选择绘制的特征
+    for num in range(2, 5):
+        eval('self.ui.SelectFeature%d.clear()' % num)  # Clear Feature 清除图表
+        eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # Add Feature 清除图表
 
-    # 在table中显示数据
+    # Displays the data in the table 在table中显示数据
     for i in range(rows):
-        rowslist = workbook_np[i, :]  # 获取excel每行内容
+        rowslist = workbook_np[i, :]  # Get each line of excel content 获取excel每行内容
         # print(rowslist)
         for j in range(len(rowslist)):
-            # 在tablewidget中添加行
+            # Add rows to the tablewidget 在tablewidget中添加行
             row = self.ui.InputDataTableView.rowCount()
             self.ui.InputDataTableView.insertRow(row)
-            # 把数据写入tablewidget中
+            # Write data to the tablewidget 把数据写入tablewidget中
             newItem = QTableWidgetItem(str(rowslist[j]))
             self.ui.InputDataTableView.setItem(i, j, newItem)
     self.ui.InputDataTableView.setAlternatingRowColors(True)
@@ -234,7 +236,7 @@ def CorrDraw(self
     # for vvv in ['Fig3', 'OtherFig']:
         eval('self.ui.%s.figure.clear()' % vvv)  # 清除图表
     index = self.ui.SelectFeature3.currentIndex()
-    print('绘图index=%d' % index)
+    print('draw(绘图)index=%d' % index)
 
     data_columns = np.array([i.split('\n')[0] for i in self.workbook.columns])
     fea = self.workbook.columns[index].split('\n')[0]
@@ -244,7 +246,7 @@ def CorrDraw(self
     print('limited_corr, limited_var')
     print(limited_corr, limited_var)
     np_data = self.workbook.values
-    # 对数据进行标准化
+    # Standardize the data 对数据进行标准化
     Intermediate_data = []
     standard_var = []
     print('*' * 20, np_data.shape, '*' * 20)
@@ -290,7 +292,7 @@ def CorrDraw(self
     corr_3 = corr1_0 + corr1_1
     corr_ = corr_1 + corr_3  # corr_2+
     corr_ = corr_.fillna(0)
-
+    # plot a correlation figure
     for vvv in ['Fig3']:
     # for vvv in ['Fig3', 'OtherFig']:
         # self.ui.%s.figure.clear() # 清除图表
@@ -355,12 +357,12 @@ def NondimenBtn(self, original_data):
     :return: The result after the data dimension        数据量纲后的结果
     '''
     index = self.ui.DimensionlessType.currentIndex()
-    fangfa = ['Standard', 'MaxMin']
+    fangfa = ['Standard', 'MaxMin'] # different mode
     if index == 0:
-        s_m = 'S'
+        s_m = 'S' # Standard
         i = 0
     else:
-        s_m = 'M'
+        s_m = 'M' # MaxMin
         i = 1
 
     s_m = s_m
@@ -374,6 +376,7 @@ def NondimenBtn(self, original_data):
     else:
         print('np.ndarray')
     Intermediate_data = []
+    # Determine whether to determine the label feature
     if isinstance(self.all_y, type(None)):
         print('all data is normalization')
         if s_m == 'M':
@@ -398,7 +401,7 @@ def NondimenBtn(self, original_data):
         dlgTitle = "Waring Error"
         strInfo = ("Please normalize the data before dividing the label "
                    "(please re-enter the imported data run, otherwise an error occurs)")
-        defaultBtn = QMessageBox.NoButton  # 缺省按钮
+        defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
         result = QMessageBox.question(self, dlgTitle, strInfo,
                                       QMessageBox.Yes,
                                       defaultBtn)
@@ -410,7 +413,7 @@ def NondimenBtn(self, original_data):
                                   columns=input_data_cols)
         # print('input_data')
         # print('./%s/无量纲后的数据.csv')
-        input_data.to_csv('./%s/无量纲后的数据.csv'%self.Wellname
+        input_data.to_csv('./%s/Data after no dimension-无量纲后的数据.csv'%self.Wellname
                           , encoding='gb18030')
         # print('Save complete')
     self.ui.NondimenBtn.setEnabled(False)

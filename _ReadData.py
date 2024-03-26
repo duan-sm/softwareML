@@ -10,25 +10,33 @@
 """
 
 def rotate_point(x, y, z, angle_degrees):
-    # 将角度转换为弧度
+    '''
+    Transformation of coordinate axes 坐标轴转化
+    :param x: Original X-axis data  原始x轴数据
+    :param y: Original Y-axis data  原始y轴数据
+    :param z: Original Z-axis data  原始z轴数据
+    :param angle_degrees: Rotation Angle  旋转角度
+    :return: New data  新数据
+    '''
+    # Convert angles to radians 将角度转换为弧度
     angle_rad = np.radians(angle_degrees)
 
-    # 定义旋转矩阵
-#     rotation_matrix = np.array([
-#         [np.cos(angle_rad), -np.sin(angle_rad), 0],
-#         [np.sin(angle_rad), np.cos(angle_rad), 0],
-#         [0, 0, 1]
-#     ])
+    # Defined rotation matrix 定义旋转矩阵
+    #     rotation_matrix = np.array([
+    #         [np.cos(angle_rad), -np.sin(angle_rad), 0],
+    #         [np.sin(angle_rad), np.cos(angle_rad), 0],
+    #         [0, 0, 1]
+    #     ])
     rotation_matrix = np.array([
         [np.cos(angle_rad), 0, np.sin(angle_rad)],
-        [0,1,0],
+        [0, 1, 0],
         [-np.sin(angle_rad), 0, np.cos(angle_rad)]
     ])
 
-    # 构建坐标点向量
+    # Construct a coordinate point vector 构建坐标点向量
     original_point = np.array([x, y, z])
 
-    # 进行矩阵乘法，得到旋转后的坐标点
+    # Matrix multiplication is performed to obtain the rotated coordinate points 进行矩阵乘法，得到旋转后的坐标点
     rotated_point = np.dot(rotation_matrix, original_point)
 
     return rotated_point
@@ -470,7 +478,7 @@ def DrawFig(self):
             return 0
     # split different region
 
-    # 划分区域
+    # Zone division 划分区域
     data = self.workbook.copy(deep=True)
     centre_point_x = StartBent
     centre_point_y = 0
@@ -481,19 +489,19 @@ def DrawFig(self):
     region12_data = data.iloc[region12_index, :]
     region0_data_xyz = region0_data.iloc[:, :3].values.copy()
     region12_data_xyz = region12_data.iloc[:, :3].values.copy()
-    # 调整原点
+    # Adjust origin 调整原点
     region12_data_xyz[:, 0] = region12_data_xyz[:, 0] - centre_point_x
     region12_data_xyz[:, 2] = region12_data_xyz[:, 2] - centre_point_z
 
-    # 转化坐标
+    # Transformation coordinate 转化坐标
     r = np.sqrt(region12_data_xyz[:, 0] ** 2 + region12_data_xyz[:, 1] ** 2 + region12_data_xyz[:, 2] ** 2)
     theta = np.arccos(region12_data_xyz[:, 2] / r) / np.pi * 180
     phi = np.arctan(region12_data_xyz[:, 1], region12_data_xyz[:, 0]) / np.pi * 180
     region12_data['r'] = r
-    region12_data['theta'] = theta  # 调整坐标系后，角度由180开始减小
+    region12_data['theta'] = theta  # After adjusting the coordinate system, the Angle decreases from 180 调整坐标系后，角度由180开始减小
     region12_data['phi'] = phi
     print(np.sort(list(set(theta))))
-    # 划分区域，有个bug
+    # Ignore bug about region 1: 划分区域，有个bug
     # region 1 由于一个切片上只有两个点精确=theta（这两个点是位于圆心和中心线上的两个点）
     # ，其他的点的theta不精确=180  因此不能找到切片
     # 这个同样导致在region1和region2划分的时候存在问题
@@ -502,7 +510,7 @@ def DrawFig(self):
     region1_data = region12_data.iloc[region1_index, :]
     region2_data = region12_data.iloc[region2_index, :]
     region1_data_xyz = region1_data.iloc[:, :3].values
-    # 调整原点
+    # Adjust origin 调整原点
     centre_point_x2 = StartBent + RadiusBent * np.sin(Angle / 180 * np.pi)
     centre_point_y2 = 0
     centre_point_z2 = RadiusBent * (1 - np.cos(Angle / 180 * np.pi))
@@ -514,9 +522,18 @@ def DrawFig(self):
     region2_data['y'] = new_point.T[:, 1]
     region2_data['z'] = new_point.T[:, 2]
     # Calculate the points for each slice 对每一个切片的点计算
+    '''
+    Note: Most of the code below is region-specific, so it is only fine-tuned
+    Different pressure /stress results in different data retention, resulting in different variables p/stress being used.
+    All else being equal, comments are only partial
+    注意：下面大部分代码仅有region不同，因此只做出微调
+    压力/应力不同导致数据保存不同，导致使用的变量p/stress不同。
+    其他均相同，注释只做部分
+    '''
     if number<=StartBent:
         # Region 0
         print('number<=StartBent')
+        # Retrieve the location by length 按照长度检索位置
         o1 = np.where(self.workbook.values[:, 0] < number + length)[0]
         o2 = np.where(self.workbook.values[:, 0] >= number)[0]
         # print('min=%.3f,max=%.3f' % (o2, o1))
@@ -534,17 +551,17 @@ def DrawFig(self):
         # Style = pressure / stress
         if Style == 0:
             p = data_ori.loc[:, ['Points_0','Points_1','Points_2','p']]
-            p_y = p.sort_values(by='Points_1', ascending=True).values
+            p_y = p.sort_values(by='Points_1', ascending=True).values # Arrange the data in ascending order of y coordinates 按照y坐标升序排列数据
             new_index = []
             new_index_inv = []
             for i in range(len(p_y)):
-                if p_y[i, 2] < 0:
+                if p_y[i, 2] < 0: # Underslice data 切片下方数据
                     new_index.append(i)
                 else:
                     new_index_inv.append(i)
-            new_i = np.concatenate((new_index, new_index_inv[::-1]))
+            new_i = np.concatenate((new_index, new_index_inv[::-1])) # concatenate data 拼接数据
             new_i = np.array(new_i, dtype=int)
-            p = p_y[new_i, :]
+            p = p_y[new_i, :] # Rearrange data 重新排列数据
         else:
             stress = data_ori.loc[:, ['Points_0','Points_1','Points_2','wallShearStress_0'
                                          ,'wallShearStress_1','wallShearStress_2']]
@@ -890,7 +907,7 @@ def DrawWholePipe(self):
     print('1'*20)
     bwith = 1
     fontsize=13
-    self.ui.OtherFig.figure.clear()  # 清除图表
+    self.ui.OtherFig.figure.clear()  # Clear chart 清除图表
     print('2' * 20)
     # index = self.ui.SelectFeature1.currentIndex()
     # print('绘图 begin')
@@ -922,7 +939,7 @@ def DrawWholePipe(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 0 is wrong. Please input the number again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
@@ -934,7 +951,7 @@ def DrawWholePipe(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 1 is wrong. Please input the angle again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
@@ -946,7 +963,7 @@ def DrawWholePipe(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 2 is wrong. Please input the angle again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)

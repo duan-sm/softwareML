@@ -439,7 +439,8 @@ class MainWindow(QMainWindow):
         try:
             SaveData(self=self)
         except:
-            self.ui.ResultsText2.append('请首先处理数据后再点击保存')
+            self.ui.ResultsText2.append('Please process the data first and then click Save')
+            # self.ui.ResultsText2.append('请首先处理数据后再点击保存')
 
     '''
     Model_interface

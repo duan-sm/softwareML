@@ -73,6 +73,14 @@ def threesigma(data
 
 
 def find_same_diff_num(num1, num2):
+    '''
+    Look for the same and different numbers in the two lists
+    寻找两个列表中相同和不同的数字
+    :param num1: list 1
+    :param num2: list 2
+    :return: The same number; Different numbers
+    相同的数字；不同的数字
+    '''
     num1 = np.sort(list(set(num1)))
     num2 = np.sort(list(set(num2)))
     same = []
@@ -130,15 +138,15 @@ def find_continue_data(a
     Input one-dimensional data, look for consecutive strings of data in the data, and return the beginning and end numbers|
     输入一维数据，寻找数据中连续的数据串，返回开始和结束的数字
     :param a: data | 数据
-    :param data_long: 限制连续数据的长度，达到一定长度视为连续的数
-    :param lag_point: 代表对于不连续的点的，设定连续长度
-    比如当lag_point=4时，认为1和5为连续的
-    :param ind_: 是否返回对应值的索引
-    :return: ss：代表 每一段连续的值
-    ss_i：代表 每一段连续的值的索引
+    :param data_long: Limit the length of continuous data, up to a certain length is regarded as continuous number   限制连续数据的长度，达到一定长度视为连续的数
+    :param lag_point: Sets the continuous length for discontinuous points   代表对于不连续的点的，设定连续长度
+    For example, when lag_point=4, 1 and 5 are considered consecutive        比如当lag_point=4时，认为1和5为连续的
+    :param ind_: Whether to return the index of the corresponding value  是否返回对应值的索引
+    :return: ss：A value representing each successive segment        代表 每一段连续的值
+    ss_i：An index that represents each successive value         代表 每一段连续的值的索引
 
-    sss：将所有数据的ss合并
-    sss_i：将所有数据的ss_i合并
+    sss：Merge the ss of all data     将所有数据的ss合并
+    sss_i：Merge ss_i of all data       将所有数据的ss_i合并
     '''
 
     ss = []
@@ -146,10 +154,10 @@ def find_continue_data(a
 
     ss_i = []
     sss_i = []
-    # 判断第一个点
+    # Judge the first point 判断第一个点
     if lag_point == None:
         for i0 in range(0, len(a)):
-            # 判断是否存在连续点
+            # Determine whether a continuous point exists 判断是否存在连续点
             if i0 == len(a) - 1:
                 if ind_ == False:
                     return sss
@@ -162,7 +170,7 @@ def find_continue_data(a
 
     else:
         for i0 in range(0, len(a)):
-            # 判断是否存在连续点
+            # Determine whether a continuous point exists 判断是否存在连续点
             if i0 == len(a) - 1:
                 if ind_ == False:
                     return sss
@@ -173,7 +181,7 @@ def find_continue_data(a
                 ss_i.append(i0)
                 break
     #     print(ss, i0)
-    # 判断后续的点
+    # Determine subsequent points 判断后续的点
     for i in range(i0 + 1, len(a) - 1):
         #         print(i)
         if lag_point == None:
