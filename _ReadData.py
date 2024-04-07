@@ -8,6 +8,14 @@
 @File: _Outlier.py
 @Software: PyCharm
 """
+import os
+import numpy as np
+import pandas as pd
+from PyQt5.QtWidgets import *
+from PyQt5.QtGui import QBrush
+from PyQt5.QtCore import Qt
+import math
+from FunctionDataPreprocessing import draw_cross_curves
 
 def rotate_point(x, y, z, angle_degrees):
     '''
@@ -41,14 +49,7 @@ def rotate_point(x, y, z, angle_degrees):
 
     return rotated_point
 
-import os
-import numpy as np
-import pandas as pd
-from PyQt5.QtWidgets import *
-from PyQt5.QtGui import QBrush
-from PyQt5.QtCore import Qt
-import math
-from FunctionDataPreprocessing import draw_cross_curves
+
 def DataInputBtn(self):
     '''
     It will open the file selection screen, read the selected file and display it.

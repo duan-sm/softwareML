@@ -17,6 +17,7 @@ from _Outlier import *
 from _FeatureAnalysis import *
 from _Model import *
 from _Test import *
+from _Regression import *
 
 '''
 [25171, 21253, 26041, 27861, 65306, 10, 25214, 21040, 112, 121, 105, 110, 115, 116, 97, 108, 108, 101, 114, 46, 101, 120
@@ -445,6 +446,27 @@ class MainWindow(QMainWindow):
         except:
             self.ui.ResultsText2.append('Please process the data first and then click Save')
             # self.ui.ResultsText2.append('请首先处理数据后再点击保存')
+
+    '''
+    Regression_interface
+    '''
+    @pyqtSlot(bool)
+    def on_Regression_clicked(self):
+        try:
+            print('??')
+            self.equation = Regression(self)
+            print('??')
+        except:
+            self.ui.RegresionTip.setText('Please input the right parameters')
+
+    @pyqtSlot(bool)
+    def on_ComputeR_clicked(self):
+        try:
+            print('???')
+            ComputeR(self, self.equation)
+            print('???')
+        except:
+            self.ui.RegresionTip.setText('Please first obtain the regression equation')
 
     '''
     Model_interface

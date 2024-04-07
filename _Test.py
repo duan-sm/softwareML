@@ -8,6 +8,7 @@
 @File: _Test.py
 @Software: PyCharm
 """
+import os
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -217,7 +218,7 @@ def Test(self):
     print('5' * 15)
     ori_test_data[:, y_index] = results_inv
     results_ = pd.DataFrame(ori_test_data, columns=data_cols) # Save intelligent model results 保存智能模型结果
-    results_.to_csv(r'E:\Software-Duan\res\result\results_new.csv')
+    results_.to_csv(os.getcwd()+r'\res\result\results_new.csv')
     print('6' * 15)
     # Add intelligent model predictions to the test set 在测试集中增加智能模型预测结果
     if StrePres_t == 0:
