@@ -454,7 +454,7 @@ class MainWindow(QMainWindow):
     def on_Regression_clicked(self):
         try:
             print('??')
-            self.equation = Regression(self)
+            self.equation, self.equation_ = Regression(self)
             print('??')
         except:
             self.ui.RegresionTip.setText('Please input the right parameters')
@@ -463,7 +463,7 @@ class MainWindow(QMainWindow):
     def on_ComputeR_clicked(self):
         try:
             print('???')
-            ComputeR(self, self.equation)
+            ComputeR(self, self.equation, self.equation_)
             print('???')
         except:
             self.ui.RegresionTip.setText('Please first obtain the regression equation')
