@@ -7,7 +7,6 @@
 import numpy as np
 import pandas as pd
 from outlier_function import threesigma, find_discontinue_data, find_same_diff_num
-from plotting_function import draw_curve, draw_cross_curves, draw_corr, PCA
 from scipy.stats import chi2_contingency
 
 
@@ -16,51 +15,51 @@ def mutualInfo(X, Y):
     '''
     互信息计算
     Mutual information computing
-    :param X: computes a variable, narray  计算的一个变量，narray
-    :param Y: computes another variable, narray        计算的另一个变量，narray
-    :return: mutual information value   互信息值
+    :param X: computes a variable, narray
+    :param Y: computes another variable, narray
+    :return: mutual information value
     '''
     #     X = np.asarray(data.iloc[:, 0])
     #     Y = np.asarray(data.iloc[:, 1])
-    # Use a dictionary to count the number of occurrences of each x element        使用字典统计每一个x元素出现的次数
-    d_x = dict()  # Dictionary of x        x的字典
+    # Use a dictionary to count the number of occurrences of each x element
+    d_x = dict()  # Dictionary of x
     for x in X:
         if x in d_x:
             d_x[x] += 1
         else:
             d_x[x] = 1
-    # Calculate the probability of occurrence of each element      计算每个元素出现的概率
+    # Calculate the probability of occurrence of each element
     p_x = dict()
     for x in d_x.keys():
         p_x[x] = d_x[x] / X.size
 
-    # Use a dictionary to count the number of occurrences of each y element     使用字典统计每一个y元素出现的次数
-    d_y = dict()  # Dictionary of y     y的字典
+    # Use a dictionary to count the number of occurrences of each y element
+    d_y = dict()  # Dictionary of y
     for y in Y:
         if y in d_y:
             d_y[y] += 1
         else:
             d_y[y] = 1
-    # Calculate the probability of occurrence of each element        计算每个元素出现的概率
+    # Calculate the probability of occurrence of each element
     p_y = dict()
     for y in d_y.keys():
         p_y[y] = d_y[y] / Y.size
 
-    # Use a dictionary to count the number of occurrences of each (x,y) element        使用字典统计每一个(x,y)元素出现的次数
-    d_xy = dict()  # x的字典
+    # Use a dictionary to count the number of occurrences of each (x,y) element
+    d_xy = dict()  #  Dictionary of x
     for i in range(X.size):
         if (X[i], Y[i]) in d_xy:
             d_xy[X[i], Y[i]] += 1
         else:
             d_xy[X[i], Y[i]] = 1
-    # Calculate the probability of occurrence of each element         计算每个元素出现的概率
+    # Calculate the probability of occurrence of each element
     p_xy = dict()
     for xy in d_xy.keys():
         p_xy[xy] = d_xy[xy] / X.size
     # print(d_x, d_y, d_xy)
     # print(p_x, p_y, p_xy)
 
-    # Initialize the mutual information value to 0        初始化互信息值为0
+    # Initialize the mutual information value to 0
     mi = 0
     for xy in p_xy.keys():
         mi += p_xy[xy] * np.log(p_xy[xy] / (p_x[xy[0]] * p_y[xy[1]]))
@@ -72,11 +71,10 @@ def mutualInfo(X, Y):
 def chi2_mutualinfo(data
                     , feature='钻时'):
     '''
-    对某个特征进行卡方检验和互信息计算
     Chi-square test and mutual information calculation are performed for a feature
-    :param data: DataFrame for storing log data       存储录井数据的DataFrame
-    :param data: indicates the feature name          特征名称
-    :return: Chi-square value and mutual information value          卡方值和互信息值
+    :param data: DataFrame for storing log data
+    :param data: indicates the feature name
+    :return: Chi-square value and mutual information value
     '''
     record = []
     data_cols_sim = np.array([_col.split('\n')[0] for _col in data.columns])
@@ -90,27 +88,22 @@ def chi2_mutualinfo(data
               ' corresponding theoretical values of the same dimension as the original data array' % kf)
         print(' ' * 10 + '\033[1;34m The mutual information results of feature %s and feature %s are as follows: %0.4f \033[0m' % (
             data_cols_sim[i], data_cols_sim[DT_index], mutual_info))
-        # print(' ' * 10 + '\033[1;31m 特征%s与特征%s的卡方检验结果为：\033[0m' % (data_cols_sim[i], data_cols_sim[DT_index]))
-        # print('卡方值=%.4f, P值=%.4f, 自由度=%i, 与原数据数组同维度的对应理论值=%s' % kf)
-        # print(' ' * 10 + '\033[1;34m 特征%s与特征%s的互信息结果为：%0.4f \033[0m' % (
-        # data_cols_sim[i], data_cols_sim[DT_index], mutual_info))
         record.append([kf[0], mutual_info])
         print(' ' * 10 + '-' * 10 + ' ' * 10)
     record = np.array(record)
     return record
 
-
+# Ignore this function
 def data_fusion(data
                 , data1
                 , rock_type):
     """
     Ignore this function
-    对岩性和原始数据进行融合
     The lithology and raw data are fused
-    :param data: DataFrame for storing log data       存储录井数据的DataFrame
-    :param data1: A DataFrame that stores the lithology corresponding to the start and stop depth         存储起止井深对应的岩性的DataFrame
-    :param rock_type: lithology type    岩性种类
-    :return: indicates the merged data     融合后的数据
+    :param data: DataFrame for storing log data
+    :param data1: A DataFrame that stores the lithology corresponding to the start and stop depth
+    :param rock_type: lithology type
+    :return: indicates the merged data
     """
 
     data['岩性'] = [[]] * len(data)
@@ -132,6 +125,7 @@ def data_fusion(data
             # print('np.where(data1.iloc[i, 2] == rock_type)[0]')
             # print(np.where(data1.iloc[i, 2] == rock_type)[0])
         except:
+            # ignore
             print('出错',ind)
             print(data.loc[ind, '岩性'])
             print([rock_encoding_num] * len(ind))
@@ -140,7 +134,7 @@ def data_fusion(data
             print(ind)
     return data
 
-
+# Ignore this function
 def data_validity(original_data
                   , bit_size_path=r'G:\F盘\1师兄任务\2022春季学期\15呼图壁\0709数据处理\钻头尺寸.xlsx'
                   , size=0
@@ -148,12 +142,11 @@ def data_validity(original_data
                   , inplace=True):
     """
     Ignore this function
-    对数据进行准确性分析
     Analyze the data for accuracy
-    :param original_data: specifies the DataFrame that stores well log data    存储录井数据的DataFrame
-    :param path: indicates the DataFrame for saving the analysis result after the analysis is complete    分析结束后保存分析结果DataFrame
-    :param path:  Whether to replace the original data     是否替换原始数据
-    :return: none无
+    :param original_data: specifies the DataFrame that stores well log data
+    :param path: indicates the DataFrame for saving the analysis result after the analysis is complete
+    :param path:  Whether to replace the original data
+    :return: none
     """
 
     data = original_data.copy()
@@ -250,141 +243,8 @@ def data_validity(original_data
 
 
 
-def outlier(original_data
-            , path):
-    '''
-    异常值处理
-    Outlier processing
-    :param original_data: specifies the DataFrame that stores well log data     存储录井数据的DataFrame
-    :param path: indicates the DataFrame for saving the analysis result after the analysis is complete         分析结束后保存分析结果DataFrame
-    :return: indicates the result after the outlier is deleted        删除异常值后的结果
-    '''
-    data = original_data.copy()
-    # Outlier processing and visualization     异常值处理与可视化
-    col = data.columns
-    i_index = []
-    index_ = []
-    for i in range(len(col)):
-        _ = threesigma(data[col[i]]
-                       , detail=False
-                       , results_s='a'
-                       , n=3)
-        out_index = _[-1]
-        i_index.append(i)
-        # All abnormal indexes are stored       所有的异常索引存储
-        index_.append(out_index)
-        print(col[i], len(out_index))
-    print('*' * 50)
-    print('The number of features with outliers is(存在异常值的特征数量为)%d' % len(index_))
-    print('*' * 50)
-
-    # The number of outliers is counted       对异常点数量进行统计
-    for i in range(len(index_)):
-        print(i_index[i], col[i_index[i]])
-        len_data = len(data)
-        if len(index_[i]) == 0:
-            print('\033[1;34m %s无异常值 \033[0m' % col[i_index[i]].split('\n')[0])
-            continue
-        if len(index_[i]) < len_data * 0.01:
-            print('-' * 50)
-            print('\033[1;31m %s的异常值数量为：%d \033[0m' % (col[i_index[i]].split('\n')[0], len(index_[i])))
-            print('-' * 50)
-    data_copy_ = np.array(data.values)
-
-    for i in range(len(index_)):
-        judge_var_index = i
-        if len(index_[i]) == 0:
-            print('%s的顺序为%d, 无异常值' % (col[judge_var_index].split('\n')[0], i))
-            continue
-        ab_point = find_same_diff_num(index_[i], np.arange(len(data)))
-        count_point = np.zeros(len(data))
-        count_point[ab_point[0]] = 1
-        print('*' * 10)
-        print('%s的顺序为%d' % (col[judge_var_index].split('\n')[0], i))
-        draw_curve(data_copy_[:, judge_var_index]
-                   , np.array(count_point)
-                   , other=True
-                   , option='abnormal_scatter'
-                   , point_s=6
-                   , xfigsize=(8, 6)
-                   , y_label=col[judge_var_index]
-                   , fontsize=15
-                   , xdpi=300
-                   , x_point=15
-                   , bwith=1.5
-                   , label=col[judge_var_index]
-                   , x_label='井深$\mathrm{(m)}$'
-                   , x_xticks=data['井深\nm'].values
-                   , ignore=True
-                   , yinv=False
-                   , fig_name='%s未修正前的异常点' % col[judge_var_index].split('\n')[0]
-                   , path=path
-                   )
-
-    for i in range(len(index_)):
-        if len(index_[i]) == 0:
-            continue
-        print('第', i, '个特征异常值数量变化情况')
-        print('原来数量', len(index_[i]))
-        _, in_ = find_discontinue_data(index_[i], data_long=10, ind_=True)
-        num = 0
-        adjust_index = []
-        for j in in_:
-            num += j[1] - j[0] + 1
-            adjust_index.extend(index_[i][j[0]:j[1] + 1])
-        index_[i] = adjust_index
-        print('后来数量', num)
-        print('*' * 20)
-
-    data_copy_ = np.array(data.values)
-    for i in range(len(index_)):
-        judge_var_index = i
-        if len(index_[i]) == 0:
-            print('%s的顺序为%d, 无异常值' % (col[judge_var_index].split('\n')[0], i))
-            print(i)
-            continue
-        ab_point = find_same_diff_num(index_[i], np.arange(len(data)))
-        count_point = np.zeros(len(data))
-        count_point[ab_point[0]] = 1
-        print('*' * 10)
-        print('%s的顺序为%d' % (col[judge_var_index].split('\n')[0], i))
-        print(len(ab_point[0]), ab_point[0])
-        draw_curve(data_copy_[:, judge_var_index]
-                   , np.array(count_point)
-                   , other=True
-                   , option='abnormal_scatter'
-                   , point_s=6
-                   , xfigsize=(8, 6)
-                   , y_label=col[judge_var_index]
-                   , fontsize=15
-                   , xdpi=300
-                   , x_point=15
-                   , bwith=1.5
-                   , label=col[judge_var_index]
-                   , x_label='井深$\mathrm{(m)}$'
-                   , x_xticks=data['井深\nm'].values
-                   , fig_name='%s修正后的异常点' % col[judge_var_index].split('\n')[0]
-                   , path=path
-                   )
-    # Count how many points there are  统计一共有多少个点
-    list_ = index_[0]
-    for i in range(1, len(index_)):
-        list_ = np.concatenate((list_, index_[i]))
-    print('数据量为', len(data))
-    list_ = np.sort(list(set(list_)))
-    print('修正后异常值数量', len(np.sort(list(set(list_)))))
-    ab_point2 = find_same_diff_num(list_, np.arange(len(data)))
-    if path:
-        data.iloc[ab_point2[1], :].to_csv(path + r'\处理异常值后的数据.csv'
-                                          , encoding='gb18030')
-    else:
-        data.iloc[ab_point2[1], :].to_csv('...//处理异常值后的数据.csv'
-                                          , encoding='gb18030')
-    return data
-
-
-
-
+'''
+# Ignore this function
 if __name__ == '__main__':
     rock_type = np.array(['浅灰色泥岩', '浅灰色泥质粉砂岩', '浅灰色石膏质粉砂岩', '浅灰色细砂岩', '深灰色泥岩', '深灰色砂砾岩',
                           '深灰色砂砾石', '深灰色砂质泥岩', '深灰色砾石', '深灰色粉砂质泥岩', '灰白色含砾泥质粉砂岩',
@@ -487,3 +347,4 @@ if __name__ == '__main__':
     data.to_csv(file_saving_path + r'\融合后的数据.csv'
                 , encoding='gb18030')
     print('\033[1;47m  \033[1;31m数据融合成功\033[0m  \033[0m')
+'''

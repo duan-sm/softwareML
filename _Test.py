@@ -20,38 +20,30 @@ from tensorflow.python.keras.models import load_model
 
 def rotate_point(x, y, z, angle_degrees):
     '''
-    Transformation of coordinate axes 坐标轴转化
-    :param x: Original X-axis data  原始x轴数据
-    :param y: Original Y-axis data  原始y轴数据
-    :param z: Original Z-axis data  原始z轴数据
-    :param angle_degrees: Rotation Angle  旋转角度
-    :return: New data  新数据
+    Transformation of coordinate axes
+    :param x: Original X-axis data
+    :param y: Original Y-axis data
+    :param z: Original Z-axis data
+    :param angle_degrees: Rotation Angle
+    :return: New data
     '''
-    # Convert angles to radians 将角度转换为弧度
+    # Convert angles to radians
     angle_rad = np.radians(angle_degrees)
-
-    # Defined rotation matrix 定义旋转矩阵
-#     rotation_matrix = np.array([
-#         [np.cos(angle_rad), -np.sin(angle_rad), 0],
-#         [np.sin(angle_rad), np.cos(angle_rad), 0],
-#         [0, 0, 1]
-#     ])
+    # Defined rotation matrix
     rotation_matrix = np.array([
         [np.cos(angle_rad), 0, np.sin(angle_rad)],
         [0,1,0],
         [-np.sin(angle_rad), 0, np.cos(angle_rad)]
     ])
 
-    # Construct a coordinate point vector 构建坐标点向量
+    # Construct a coordinate point vector
     original_point = np.array([x, y, z])
-
-    # Matrix multiplication is performed to obtain the rotated coordinate points 进行矩阵乘法，得到旋转后的坐标点
+    # Matrix multiplication is performed to obtain the rotated coordinate points
     rotated_point = np.dot(rotation_matrix, original_point)
 
     return rotated_point
 def LoadParaBtn(self):
     '''
-    选择文件窗口。选择模型归一化参数。
     Select the file window. Select model normalization parameters.
     '''
     print('DataInputBtn|' * 10)
@@ -66,7 +58,7 @@ def LoadParaBtn(self):
         if fname:
             self.ui.ParaTable.clearContents()
             print('fname', fname)
-            # 打开文件
+            # open file
             if fname[-3:] == 'csv':
                 filetype = '.csv'
                 self.paraData = pd.read_csv(fname
@@ -84,9 +76,8 @@ def LoadParaBtn(self):
                 self.paraData = pd.read_excel(fname, skiprows=1, sheet_name=0)
                 self.ui.Results4.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
             else:
-                # self.ui.Results.setText('打开文件格式为%s，不满足要求'%(fname.split('.')[1]))
                 self.ui.Results4.setText('The file format should be: xls, csv, xlsx' % (fname.split('/')[-1]))
-            # Get values for entire rows and columns (arrays) 获取整行和整列的值（数组）
+            # Get values for entire rows and columns (arrays)
             columns = [i.split('\n')[0] for i in self.paraData.columns]
             print(columns)
             rows = len(self.paraData)
@@ -101,21 +92,21 @@ def LoadParaBtn(self):
                 ##  font.setBold(True)
                 font.setPointSize(18)
                 headerItem.setFont(font)
-                headerItem.setForeground(QBrush(Qt.red))  # 前景色，即文字颜色
+                headerItem.setForeground(QBrush(Qt.red))  # Foreground color
                 self.ui.ParaTable.setHorizontalHeaderItem(i, headerItem)
 
             self.ui.ParaTable.resizeRowsToContents()
             self.ui.ParaTable.resizeColumnsToContents()
 
-            # Displays the data in the table 在table中显示数据
+            # Displays the data in the table
             for i in range(rows):
-                rowslist = workbook_np[i, :]  # 获取excel每行内容
+                rowslist = workbook_np[i, :]  # Get the content of each row in Excel
                 # print(rowslist)
                 for j in range(len(rowslist)):
-                    # Add rows to the tablewidget 在tablewidget中添加行
+                    # Add rows to the tablewidget 
                     row = self.ui.ParaTable.rowCount()
                     self.ui.ParaTable.insertRow(row)
-                    # Write data to the tablewidget 把数据写入tablewidget中
+                    # Write data to the tablewidget 
                     newItem = QTableWidgetItem(str(rowslist[j]))
                     self.ui.ParaTable.setItem(i, j, newItem)
             self.ui.ParaTable.setAlternatingRowColors(True)
@@ -127,7 +118,6 @@ def LoadParaBtn(self):
 
 def LoadTestData(self):
     '''
-    选择文件窗口。选择对模型进行测试的数据。
     Select the file window. Select the data to test the model against.
     '''
     fname, _ = QFileDialog.getOpenFileName(self, 'Open file', '.'
@@ -135,7 +125,7 @@ def LoadTestData(self):
     try:
         if fname:
             print('fname', fname)
-            # 打开文件
+            # open file
             if fname[-3:] == 'csv':
                 filetype = '.csv'
                 self.testworkbook = pd.read_csv(fname, encoding='gb18030')
@@ -162,17 +152,16 @@ def Test(self):
     Test button.
     When the test data is imported and the normalized parameters and corresponding model are selected,
      the second button can be used to test the model.
-    测试按钮。当导入测试数据，选择归一化参数和对应模型后，利用次按钮可以进行模型测试。
     '''
     print('1' * 15)
-    # Load the model under test 加载被测试模型
+    # Load the model under test 
     m = load_model(self.model)
     data_cols = self.testworkbook.columns
-    # Copy the test data set 复制测试数据集
+    # Copy the test data set 
     ori_test_data = self.testworkbook.values.copy()
     DimensionlessPara = self.paraData.values.copy()
     print('2' * 15)
-    # Test data set normalization 测试数据集归一化
+    # Test data set normalization 
     DimensionlessType_index = self.ui.DimensionlessType.currentIndex()  #
     if DimensionlessType_index == 0:
         test_data = (ori_test_data - DimensionlessPara[0, :]) / np.sqrt(DimensionlessPara[1, :])
@@ -197,9 +186,9 @@ def Test(self):
         print(y_index1, y_index2, y_index3, y_index)
     print('4' * 15)
     print('test_data.shape', test_data.shape)
-    results = m(test_data) # Intelligent models predict outcomes 智能模型预测结果
+    results = m(test_data) # Intelligent models predict outcomes 
     print('4.5' * 15)
-    # The prediction results are reverse-normalized 对预测结果反归一化
+    # The prediction results are reverse-normalized 
     if DimensionlessType_index == 0:
         print('DimensionlessType_index=%d' % DimensionlessType_index)
         print('results.shape, DimensionlessPara.shape')
@@ -217,10 +206,10 @@ def Test(self):
             1, y_index]
     print('5' * 15)
     ori_test_data[:, y_index] = results_inv
-    results_ = pd.DataFrame(ori_test_data, columns=data_cols) # Save intelligent model results 保存智能模型结果
+    results_ = pd.DataFrame(ori_test_data, columns=data_cols) # Save intelligent model results 
     results_.to_csv(os.getcwd()+r'\res\result\results_new.csv')
     print('6' * 15)
-    # Add intelligent model predictions to the test set 在测试集中增加智能模型预测结果
+    # Add intelligent model predictions to the test set 
     if StrePres_t == 0:
         self.testworkbook['prediction_p'] = results_inv
     else:
@@ -234,18 +223,16 @@ def Test(self):
 
 def DrawSliceT(self):
     '''
-    绘制切片的模拟结果与智能模型预测结果。切片位置选择见TestDataPara框架。
     Draw the simulation results of slices and the prediction results of intelligent models.
     See TestDataPara framework for slice location selection.
     """
     All of the code in this section appears in _ReadData.py, so it's not commented on in detail
-    此部分所有代码在_ReadData.py中均有出现，因此不加以详细注释
     """
     '''
     print('DrawSliceT')
     fontsize = 13
     bwith = 1
-    self.ui.TestFig.figure.clear()  # 清除图表
+    self.ui.TestFig.figure.clear()  # clear fig
 
     # index = self.ui.SelectFeature1.currentIndex()
     print('绘图 begin')
@@ -277,7 +264,7 @@ def DrawSliceT(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 0 is wrong. Please input the number again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default Button
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
@@ -289,7 +276,7 @@ def DrawSliceT(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 1 is wrong. Please input the angle again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default Button
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
@@ -301,12 +288,12 @@ def DrawSliceT(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 2 is wrong. Please input the angle again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default Button
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
             return 0
-    # 划分区域
+    # Divide the area
     data = self.testworkbook.copy(deep=True)
     centre_point_x = StartBent_t
     centre_point_y = 0
@@ -317,28 +304,28 @@ def DrawSliceT(self):
     region12_data = data.iloc[region12_index, :]
     region0_data_xyz = region0_data.iloc[:, :3].values.copy()
     region12_data_xyz = region12_data.iloc[:, :3].values.copy()
-    # 调整原点
+    # Adjust the origin
     region12_data_xyz[:, 0] = region12_data_xyz[:, 0] - centre_point_x
     region12_data_xyz[:, 2] = region12_data_xyz[:, 2] - centre_point_z
 
-    # 转化坐标
+    # Convert coordinates
     r = np.sqrt(region12_data_xyz[:, 0] ** 2 + region12_data_xyz[:, 1] ** 2 + region12_data_xyz[:, 2] ** 2)
     theta = np.arccos(region12_data_xyz[:, 2] / r) / np.pi * 180
     phi = np.arctan(region12_data_xyz[:, 1], region12_data_xyz[:, 0]) / np.pi * 180
     region12_data['r'] = r
-    region12_data['theta'] = theta  # 调整坐标系后，角度由180开始减小
+    region12_data['theta'] = theta  # After adjusting the coordinate system, the angle decreases from 180
     region12_data['phi'] = phi
     print(np.sort(list(set(theta))))
-    # 划分区域，有个bug
-    # region 1 由于一个切片上只有两个点精确=theta（这两个点是位于圆心和中心线上的两个点）
-    # ，其他的点的theta不精确=180  因此不能找到切片
-    # 这个同样导致在region1和region2划分的时候存在问题
+    # There is a bug in dividing the region
+    # region 1 Since only two points on a slice are accurate = theta (these two points are located at the center of the circle and the center line)
+    # , the theta of other points is not accurate = 180, so the slice cannot be found
+    # This also causes problems when dividing region1 and region2
     region1_index = np.where(theta > 180 - Angle_t)[0]
     region2_index = np.where(theta <= 180 - Angle_t)[0]
     region1_data = region12_data.iloc[region1_index, :]
     region2_data = region12_data.iloc[region2_index, :]
     region1_data_xyz = region1_data.iloc[:, :3].values
-    # 调整原点
+    # Adjust the origin
     centre_point_x2 = StartBent_t + RadiusBent_t * np.sin(Angle_t / 180 * np.pi)
     centre_point_y2 = 0
     centre_point_z2 = RadiusBent_t * (1 - np.cos(Angle_t / 180 * np.pi))

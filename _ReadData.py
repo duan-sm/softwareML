@@ -15,21 +15,20 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QBrush
 from PyQt5.QtCore import Qt
 import math
-from FunctionDataPreprocessing import draw_cross_curves
 
 def rotate_point(x, y, z, angle_degrees):
     '''
-    Transformation of coordinate axes 坐标轴转化
-    :param x: Original X-axis data  原始x轴数据
-    :param y: Original Y-axis data  原始y轴数据
-    :param z: Original Z-axis data  原始z轴数据
-    :param angle_degrees: Rotation Angle  旋转角度
-    :return: New data  新数据
+    Transformation of coordinate axes
+    :param x: Original X-axis data
+    :param y: Original Y-axis data
+    :param z: Original Z-axis data
+    :param angle_degrees: Rotation Angle
+    :return: New data
     '''
-    # Convert angles to radians 将角度转换为弧度
+    # Convert angles to radians
     angle_rad = np.radians(angle_degrees)
 
-    # Defined rotation matrix 定义旋转矩阵
+    # Defined rotation matrix
     #     rotation_matrix = np.array([
     #         [np.cos(angle_rad), -np.sin(angle_rad), 0],
     #         [np.sin(angle_rad), np.cos(angle_rad), 0],
@@ -41,10 +40,10 @@ def rotate_point(x, y, z, angle_degrees):
         [-np.sin(angle_rad), 0, np.cos(angle_rad)]
     ])
 
-    # Construct a coordinate point vector 构建坐标点向量
+    # Construct a coordinate point vector
     original_point = np.array([x, y, z])
 
-    # Matrix multiplication is performed to obtain the rotated coordinate points 进行矩阵乘法，得到旋转后的坐标点
+    # Matrix multiplication is performed to obtain the rotated coordinate points
     rotated_point = np.dot(rotation_matrix, original_point)
 
     return rotated_point
@@ -53,26 +52,25 @@ def rotate_point(x, y, z, angle_degrees):
 def DataInputBtn(self):
     '''
     It will open the file selection screen, read the selected file and display it.
-    它将会打开文件选择界面，在选定文件后读取文件并展示。
     '''
     print('DataInputBtn|'*10)
-    # Re-read the data and clear the previous contents 重新读取数据，清空之前的内容
+    # Re-read the data and clear the previous contents
     self.ui.NondimenBtn.setEnabled(True)
     self.ui.DimenComBtn.setEnabled(True)
     self.ui.NondimenBtn.setEnabled(True)
-    self.ui.FeatureFig.figure.clear()  # 清除图表 Clear Figure
+    self.ui.FeatureFig.figure.clear()  # Clear Figure
     self.ui.FeatureFig.figure.clf()
     # self.ui.FeatureFig.figure.cla()
-    self.ui.OtherFig.figure.clear()  # 清除图表 Clear Figure
+    self.ui.OtherFig.figure.clear()  # Clear Figure
     self.ui.OtherFig.figure.clf()
     # self.ui.OtherFig.figure.cla()
-    self.ui.FeatureFig2.figure.clear()  # 清除图表 Clear Figure
+    self.ui.FeatureFig2.figure.clear()  # Clear Figure
     self.ui.FeatureFig2.figure.clf()
     # self.ui.FeatureFig2.figure.cla()
-    self.ui.Fig3.figure.clear()  # 清除图表 Clear Figure
+    self.ui.Fig3.figure.clear()  # Clear Figure
     self.ui.Fig3.figure.clf()
     # self.ui.Fig3.figure.cla()
-    self.ui.LossFig.figure.clear()  # 清除图表 Clear Figure
+    self.ui.LossFig.figure.clear()  # Clear Figure
     self.ui.LossFig.figure.clf()
     # self.ui.LossFig.figure.cla()
     self.ui.ResultsText1.clear()
@@ -101,23 +99,17 @@ def DataInputBtn(self):
     self.state = -1
     print('0|' * 10)
     if self.Wellname == '例：呼111' or self.Wellname == '请输入井号' or self.Wellname == '' or len(self.Wellname)<1:
-        # self.ui.WellName.setPlaceholderText('请输入井号')
         self.ui.WellName.setPlaceholderText('Please input FileName')
-        # self.ui.Results.setText('请输入井号，确定后续文件保存路径，否则无法继续')
         self.ui.Results.setText('Enter the folder name to determine the path for saving subsequent files.')
         return 0
     # if not os.path.isdir(self.Wellname):
     #     os.mkdir(self.Wellname)
-    # Example Create a data save path 创建数据保存路径
+    # Example Create a data save path
     if not os.path.exists(r'./%s'%self.Wellname):
         os.makedirs(r'./%s'%self.Wellname)
     # if not os.path.isdir(self.Wellname):
     #     os.mkdir(self.Wellname)
-    # fname, _ = QFileDialog.getOpenFileName(self, '打开文件', '.'
-    #                                        , '数据文件(*.csv *.xlsx *.xls)'
-    #                                        )
-    print('1|' * 10)
-    # Open the Select file window 打开选择文件窗口
+    # Open the Select file window
     fname, _ = QFileDialog.getOpenFileName(self, 'Open file', '.'
                                            , 'Data file(*.csv *.xlsx *.xls)'
                                            )
@@ -128,7 +120,7 @@ def DataInputBtn(self):
         if fname:
             self.ui.InputDataTableView.clearContents()
             print('fname', fname)
-            # Open csv file 打开csv文件
+            # Open csv file
             if fname[-3:]=='csv':
                 self.filetype = '.csv'
                 self.workbook = pd.read_csv(fname
@@ -141,9 +133,8 @@ def DataInputBtn(self):
                     self.workbook = self.workbook.iloc[:,1:]
                 elif sum(workbook_first_col2)==len(workbook_first_col2):
                     self.workbook = self.workbook.iloc[:, 1:]
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
-            elif fname[-3:]=='lsx': # Open xlsx file 打开xlsx文件
+            elif fname[-3:]=='lsx': # Open xlsx file
                 print('3|' * 10)
                 self.filetype = '.xlsx'
                 self.workbook = pd.read_excel(fname,index_col=index_col)
@@ -155,9 +146,8 @@ def DataInputBtn(self):
                     workbook = self.workbook.iloc[:, 1:]
                 elif sum(workbook_first_col2) == len(workbook_first_col2):
                     workbook = self.workbook.iloc[:, 1:]
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
-            elif fname[-3:]=='xls':# Open xls file 打开xls文件
+            elif fname[-3:]=='xls':# Open xls file
                 print('3|' * 10)
                 self.filetype = '.xlsx'
                 self.workbook = pd.read_excel(fname,skiprows=1,sheet_name=0)
@@ -177,12 +167,10 @@ def DataInputBtn(self):
                         col_c.append(new_c[0])
                 print('5|' * 10)
                 self.workbook.columns = col_c
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
             else:
-                # self.ui.Results.setText('打开文件格式为%s，不满足要求'%(fname.split('.')[1]))
                 self.ui.Results.setText('The file format should be: xls, csv, xlsx' % (fname.split('/')[-1]))
-            # 获取整行和整列的值（数组）
+            # Get the value of the entire row and column (array)
             columns = [i.split('\n')[0] for i in self.workbook.columns]
             print(columns)
             rows = len(self.workbook)
@@ -190,7 +178,7 @@ def DataInputBtn(self):
             # print(sheet1.nrows)
             self.ui.InputDataTableView.setRowCount(rows)
             self.ui.InputDataTableView.setColumnCount(len(columns))
-            # Set the header in the window 在窗口设置表头
+            # Set the header in the window
             for i in range(len(columns)):
                 # print(i)
                 headerItem = QTableWidgetItem(columns[i])
@@ -198,25 +186,25 @@ def DataInputBtn(self):
                 ##  font.setBold(True)
                 font.setPointSize(18)
                 headerItem.setFont(font)
-                headerItem.setForeground(QBrush(Qt.red))  # Foreground color, text color 前景色，即文字颜色
+                headerItem.setForeground(QBrush(Qt.red))  # Foreground color, text color
                 self.ui.InputDataTableView.setHorizontalHeaderItem(i, headerItem)
 
             self.ui.InputDataTableView.resizeRowsToContents()
             self.ui.InputDataTableView.resizeColumnsToContents()
-            # Initializing can select drawn features 初始化可以选择绘制的特征
+            # Initializing can select drawn features
             for num in range(2,5):
-                eval('self.ui.SelectFeature%d.clear()' % num)  # Clear chart 清除图表
-                eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # Clear chart 清除图表
+                eval('self.ui.SelectFeature%d.clear()' % num)  # Clear chart
+                eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # Clear chart
 
-            # # Displays the data in a window 在窗口中显示数据
+            # # Displays the data in a window
             for i in range(rows):
-                rowslist = workbook_np[i,:]  # 获取excel每行内容
+                rowslist = workbook_np[i,:]  # Get the content of each row in Excel
                 # print(rowslist)
                 for j in range(len(rowslist)):
-                    # 在tablewidget中添加行
+                    # Adding rows in tablewidget
                     row = self.ui.InputDataTableView.rowCount()
                     self.ui.InputDataTableView.insertRow(row)
-                    # 把数据写入tablewidget中
+                    # Write data into tablewidget
                     newItem = QTableWidgetItem(str(rowslist[j]))
                     self.ui.InputDataTableView.setItem(i, j, newItem)
             self.ui.InputDataTableView.setAlternatingRowColors(True)
@@ -233,8 +221,6 @@ def merge(self):
     self.Wellname = self.ui.WellName.text()
     if self.Wellname == '例：呼111' or self.Wellname == '请输入井号' or self.Wellname == '' or len(
             self.Wellname) < 1:
-        # self.ui.WellName.setPlaceholderText('请输入井号')
-        # self.ui.Results.setText('请输入井号，确定后续文件保存路径，否则无法继续')
         self.ui.WellName.setPlaceholderText('Please input FileName')
         self.ui.Results.setText('Enter the folder name to determine the path for saving subsequent files.')
         return 0
@@ -243,9 +229,6 @@ def merge(self):
 
     try:
         self.size_ = 1
-        # fname, _ = QFileDialog.getOpenFileName(self, '打开文件', '.'
-        #                                        , '数据文件(*.csv *.xlsx *.xls)'
-        #                                        )
         fname = QFileDialog.getExistingDirectory(self, "Select Folder", "/"
                                                )
         allFileName = os.listdir(fname)
@@ -258,20 +241,16 @@ def merge(self):
                 data = pd.read_csv(fname+'\\'+allFileName[0]
                                    , encoding='gb18030'
                                    )
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results.setText('Open the file:%s. Successful' % allFileName[0])
             elif allFileName[0][-3:] == 'lsx':
                 self.filetype = '.xlsx'
                 data = pd.read_excel(fname+'\\'+allFileName[0], sheet_name=0)
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results.setText('Open the file:%s. Successful' % allFileName[0])
             elif allFileName[0][-3:] == 'xls':
                 self.filetype = '.xlsx'
                 data = pd.read_excel(fname+'\\'+allFileName[0], sheet_name=0)
-                # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                 self.ui.Results.setText('Open the file:%s. Successful' % allFileName[0])
             else:
-                # self.ui.Results.setText('打开文件格式为%s，不满足要求' % (fname.split('.')[1]))
                 self.ui.Results.setText('The file format should be: xls, csv, xlsx' % allFileName[0])
             print('first is OK')
             for fileIndex in range(1,len(allFileName)):
@@ -282,20 +261,16 @@ def merge(self):
                     data1 = pd.read_csv(fname+'\\'+allFileName[fileIndex]
                                        , encoding='gb18030'
                                        )
-                    # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                     self.ui.Results.setText('Open the file:%s. Successful' % allFileName[fileIndex])
                 elif allFileName[fileIndex][-3:] == 'lsx':
                     self.filetype = '.xlsx'
                     data1 = pd.read_excel(fname+'\\'+allFileName[fileIndex], sheet_name=0)
-                    # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                     self.ui.Results.setText('Open the file:%s. Successful' % allFileName[fileIndex])
                 elif allFileName[fileIndex][-3:] == 'xls':
                     self.filetype = '.xlsx'
                     data1 = pd.read_excel(fname+'\\'+allFileName[fileIndex], sheet_name=0)
-                    # self.ui.Results.setText('打开文件:%s，成功' % (fname.split('/')[-1]))
                     self.ui.Results.setText('Open the file:%s. Successful' % allFileName[fileIndex])
                 else:
-                    # self.ui.Results.setText('打开文件格式为%s，不满足要求' % (fname.split('.')[1]))
                     self.ui.Results.setText('The file format should be: xls, csv, xlsx' % allFileName[fileIndex])
                 print('*'*10)
                 print(data, data1)
@@ -311,13 +286,12 @@ def merge(self):
 
     except:
         print('self.size_ = 0')
-        # self.ui.Results.setText('文件错误')
         self.ui.Results.setText('Error: file')
         self.size_ = 0
 
 def btnDelCols(self):
     '''
-    Delete empty column 删除空的列
+    Delete empty column 
     '''
     try:
         row0, col0 = self.workbook.shape
@@ -325,15 +299,13 @@ def btnDelCols(self):
         row1, col1 = self.workbook.shape
         cha = col0 - col1
         self.ui.delColsNum.setText(str(cha))
-        # self.ui.Results.setText('完成删除空列，数量为:%d' % cha)
         self.ui.Results.setText('Complete deletion of empty columns, the number is:%d' % cha)
     except:
-        # self.ui.Results.setText('请输入数据后再点击删除')
         self.ui.Results.setText('Please input the data and click Delete')
 
 def btnDelRows(self):
     '''
-        Delete empty lines 删除空的行
+        Delete empty lines 
     '''
     try:
         row0, col0 = self.workbook.shape
@@ -341,29 +313,25 @@ def btnDelRows(self):
         row1, col1 = self.workbook.shape
         cha = row0 - row1
         self.ui.delRowsNum.setText(str(cha))
-        # self.ui.Results.setText('完成删除空行，数量为:%d' % cha)
         self.ui.Results.setText('Complete deletion of empty lines, the number is:%d' % cha)
     except:
-        # self.ui.Results.setText('请输入数据后再点击删除')
         self.ui.Results.setText('Please input the data and click Delete')
 
 def btnSaveData(self):
     '''
-    The modified data is saved 保存修改后的数据
+    The modified data is saved 
     '''
     try:
-        # Determine data type 确定数据类型
+        # Determine data type 
         if self.filetype == '.csv':
             print('file style is .csv')
             self.workbook.to_csv(os.getcwd() + '\\' + self.Wellname + '\\' + '%s-0NoneNull.csv' % self.Wellname
                                  , encoding='gb18030')
-            # self.ui.Results.setText('保存文件：0处理空值%s.csv' % self.Wellname)
             self.ui.Results.setText('Save file: %s-0NoneNull' % self.Wellname)
         else:
             print('file style is .xlsx')
             self.workbook.to_excel(os.getcwd() + '\\' + self.Wellname + '\\' + '%s-0NoneNull.xlsx' % self.Wellname
                                    )
-            # self.ui.Results.setText('保存文件：0处理空值%s.xlsx' % self.Wellname)
             self.ui.Results.setText('Save file: %s-0NoneNull' % self.Wellname)
 
 
@@ -371,9 +339,9 @@ def btnSaveData(self):
         columns = [i.split('\n')[0] for i in self.workbook.columns]
         workbook_np = self.workbook.values
         rows, cols = workbook_np.shape
-        print('行数，列数')
+        print('rows，cols')
         print(rows, cols)
-        # Set header 设置表头
+        # Set header 
         self.ui.InputDataTableView.setRowCount(rows)
         self.ui.InputDataTableView.setColumnCount(len(columns))
         for i in range(len(columns)):
@@ -383,30 +351,29 @@ def btnSaveData(self):
             ##  font.setBold(True)
             font.setPointSize(18)
             headerItem.setFont(font)
-            headerItem.setForeground(QBrush(Qt.red))  # 前景色，即文字颜色
+            headerItem.setForeground(QBrush(Qt.red))  # Foreground color, i.e. text color
             self.ui.InputDataTableView.setHorizontalHeaderItem(i, headerItem)
 
         self.ui.InputDataTableView.resizeRowsToContents()
         self.ui.InputDataTableView.resizeColumnsToContents()
-        # Initializing can select drawn features 初始化可以选择绘制的特征
+        # Initializing can select drawn features 
         for num in range(2, 5):
-            eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
-            eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # 清除图表
+            eval('self.ui.SelectFeature%d.clear()' % num)  # clear fig
+            eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # clear fig
 
         for i in range(rows):
-            rowslist = workbook_np[i, :]  # 获取excel每行内容
+            rowslist = workbook_np[i, :]
             # print(rowslist)
             for j in range(len(rowslist)):
-                # Add rows to the tablewidget 在tablewidget中添加行
+                # Add rows to the tablewidget
                 row = self.ui.InputDataTableView.rowCount()
                 self.ui.InputDataTableView.insertRow(row)
-                # Write data to the tablewidget 把数据写入tablewidget中
+                # Write data to the tablewidget
                 newItem = QTableWidgetItem(str(rowslist[j]))
                 self.ui.InputDataTableView.setItem(i, j, newItem)
         self.ui.InputDataTableView.setAlternatingRowColors(True)
         self.ui.Results.setText('Delete empty values of the table has been saved')
     except:
-        # self.ui.Results.setText('请输入数据处理后再点击保存')
         self.ui.Results.setText('Please input the data and then click Save')
 
 
@@ -414,15 +381,14 @@ def DrawFig(self):
     '''
         Plot slice
         Draws a slice of the selected location (as determined by the input page data).
-        绘制选定位置（由输入页面数据确定）的切片。
     '''
     bwith = 1
     fontsize=13
-    self.ui.FeatureFig.figure.clear()  # Clear chart 清除图表
+    self.ui.FeatureFig.figure.clear()  # Clear chart clear fig
 
     # index = self.ui.SelectFeature1.currentIndex()
     # print('绘图 begin')
-    # Read interface parameters 读取界面参数
+    # Read interface parameters
     length = float(self.ui.length.text())
     Angle = float(self.ui.Angle.text())
     StartBent = float(self.ui.StartBent.text())
@@ -440,7 +406,7 @@ def DrawFig(self):
     # RadiusBent = 60in/1.524m
     Region = self.ui.Region.currentIndex()
     Style = self.ui.Style0.currentIndex()
-    # Ensure that the parameter range is correct 保证参数输入范围正确
+    # Ensure that the parameter range is correct
     if Region == 0:
         if number <= StartBent and number>=0:
             pass
@@ -448,7 +414,7 @@ def DrawFig(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 0 is wrong. Please input the number again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
@@ -460,7 +426,7 @@ def DrawFig(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 1 is wrong. Please input the angle again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
@@ -472,14 +438,14 @@ def DrawFig(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 2 is wrong. Please input the angle again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # 缺省按钮
+            defaultBtn = QMessageBox.NoButton
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
             return 0
     # split different region
 
-    # Zone division 划分区域
+    # Zone division
     data = self.workbook.copy(deep=True)
     centre_point_x = StartBent
     centre_point_y = 0
@@ -490,28 +456,28 @@ def DrawFig(self):
     region12_data = data.iloc[region12_index, :]
     region0_data_xyz = region0_data.iloc[:, :3].values.copy()
     region12_data_xyz = region12_data.iloc[:, :3].values.copy()
-    # Adjust origin 调整原点
+    # Adjust origin
     region12_data_xyz[:, 0] = region12_data_xyz[:, 0] - centre_point_x
     region12_data_xyz[:, 2] = region12_data_xyz[:, 2] - centre_point_z
 
-    # Transformation coordinate 转化坐标
+    # Transformation coordinate
     r = np.sqrt(region12_data_xyz[:, 0] ** 2 + region12_data_xyz[:, 1] ** 2 + region12_data_xyz[:, 2] ** 2)
     theta = np.arccos(region12_data_xyz[:, 2] / r) / np.pi * 180
     phi = np.arctan(region12_data_xyz[:, 1], region12_data_xyz[:, 0]) / np.pi * 180
     region12_data['r'] = r
-    region12_data['theta'] = theta  # After adjusting the coordinate system, the Angle decreases from 180 调整坐标系后，角度由180开始减小
+    region12_data['theta'] = theta  # After adjusting the coordinate system, the Angle decreases from 180
     region12_data['phi'] = phi
     print(np.sort(list(set(theta))))
-    # Ignore bug about region 1: 划分区域，有个bug
-    # region 1 由于一个切片上只有两个点精确=theta（这两个点是位于圆心和中心线上的两个点）
-    # ，其他的点的theta不精确=180  因此不能找到切片
-    # 这个同样导致在region1和region2划分的时候存在问题
+    # Ignore bug about region 1:
+    # region 1 Since only two points on a slice are accurate = theta (these two points are located at the center of the circle and the center line)
+    # , the theta of other points is not accurate = 180, so the slice cannot be found
+    # This also causes problems when dividing region1 and region2
     region1_index = np.where(theta > 180 - Angle)[0]
     region2_index = np.where(theta <= 180 - Angle)[0]
     region1_data = region12_data.iloc[region1_index, :]
     region2_data = region12_data.iloc[region2_index, :]
     region1_data_xyz = region1_data.iloc[:, :3].values
-    # Adjust origin 调整原点
+    # Adjust origin
     centre_point_x2 = StartBent + RadiusBent * np.sin(Angle / 180 * np.pi)
     centre_point_y2 = 0
     centre_point_z2 = RadiusBent * (1 - np.cos(Angle / 180 * np.pi))
@@ -522,19 +488,16 @@ def DrawFig(self):
     region2_data['x'] = new_point.T[:, 0]
     region2_data['y'] = new_point.T[:, 1]
     region2_data['z'] = new_point.T[:, 2]
-    # Calculate the points for each slice 对每一个切片的点计算
+    # Calculate the points for each slice
     '''
     Note: Most of the code below is region-specific, so it is only fine-tuned
     Different pressure /stress results in different data retention, resulting in different variables p/stress being used.
     All else being equal, comments are only partial
-    注意：下面大部分代码仅有region不同，因此只做出微调
-    压力/应力不同导致数据保存不同，导致使用的变量p/stress不同。
-    其他均相同，注释只做部分
     '''
     if number<=StartBent:
         # Region 0
         print('number<=StartBent')
-        # Retrieve the location by length 按照长度检索位置
+        # Retrieve the location by length
         o1 = np.where(self.workbook.values[:, 0] < number + length)[0]
         o2 = np.where(self.workbook.values[:, 0] >= number)[0]
         # print('min=%.3f,max=%.3f' % (o2, o1))
@@ -552,17 +515,17 @@ def DrawFig(self):
         # Style = pressure / stress
         if Style == 0:
             p = data_ori.loc[:, ['Points_0','Points_1','Points_2','p']]
-            p_y = p.sort_values(by='Points_1', ascending=True).values # Arrange the data in ascending order of y coordinates 按照y坐标升序排列数据
+            p_y = p.sort_values(by='Points_1', ascending=True).values # Arrange the data in ascending order of y coordinates
             new_index = []
             new_index_inv = []
             for i in range(len(p_y)):
-                if p_y[i, 2] < 0: # Underslice data 切片下方数据
+                if p_y[i, 2] < 0: # Underslice data
                     new_index.append(i)
                 else:
                     new_index_inv.append(i)
-            new_i = np.concatenate((new_index, new_index_inv[::-1])) # concatenate data 拼接数据
+            new_i = np.concatenate((new_index, new_index_inv[::-1])) # concatenate data
             new_i = np.array(new_i, dtype=int)
-            p = p_y[new_i, :] # Rearrange data 重新排列数据
+            p = p_y[new_i, :] # Rearrange data
         else:
             stress = data_ori.loc[:, ['Points_0','Points_1','Points_2','wallShearStress_0'
                                          ,'wallShearStress_1','wallShearStress_2']]
@@ -777,11 +740,11 @@ def DrawFig(self):
     self.ui.FeatureFig.figure.canvas.draw()
 
     print('****'*3)
-    self.ui.CurveFig.figure.clear()  # 清除图表
+    self.ui.CurveFig.figure.clear()  # clear fig
     print('test')
     ax1 = self.ui.CurveFig.figure.add_subplot(1, 1, 1, label='plot3D')
 
-    # Data point ordering 数据点排序
+    # Data point ordering
     if Style==0:
         diyi_1 = np.where(p[:, 1] < 0)[0]
         diyi_2 = np.where(p[:, 2] < z_special)[0]
@@ -908,11 +871,10 @@ def DrawWholePipe(self):
     print('1'*20)
     bwith = 1
     fontsize=13
-    self.ui.OtherFig.figure.clear()  # Clear chart 清除图表
+    self.ui.OtherFig.figure.clear()  # Clear chart clear fig
     print('2' * 20)
     # index = self.ui.SelectFeature1.currentIndex()
-    # print('绘图 begin')
-    # Read interface input 读取界面输入
+    # Read interface input
     length = float(self.ui.length.text())
     Angle = float(self.ui.Angle.text())
     StartBent = float(self.ui.StartBent.text())
@@ -932,7 +894,7 @@ def DrawWholePipe(self):
     # RadiusBent = 60in/1.524m
     Region = self.ui.Region.currentIndex()
     Style = self.ui.Style0.currentIndex()
-    # Determine whether the plot area and the input data range are reasonable 确定绘图区域与输入数据范围是否合理
+    # Determine whether the plot area and the input data range are reasonable
     if Region == 0:
         if number <= StartBent and number >= 0:
             pass
@@ -940,7 +902,7 @@ def DrawWholePipe(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 0 is wrong. Please input the number again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default button
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
@@ -952,7 +914,7 @@ def DrawWholePipe(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 1 is wrong. Please input the angle again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default button
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
@@ -964,12 +926,12 @@ def DrawWholePipe(self):
             dlgTitle = "Tips"
             strInfo = ("The range of region 2 is wrong. Please input the angle again."
                        "Click 'WholePipe-CentreLine', you will get the right range.")
-            defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
+            defaultBtn = QMessageBox.NoButton  # Default button
             result = QMessageBox.question(self, dlgTitle, strInfo,
                                           QMessageBox.Yes,
                                           defaultBtn)
             return 0
-    # Calculate the key parameters of the pipeline 计算管线的关键参数
+    # Calculate the key parameters of the pipeline
     # StartBent = 240in/6.096m
     # Angle=90
     # DCircle = 30in/0.762m
@@ -988,7 +950,7 @@ def DrawWholePipe(self):
     y = np.zeros(all_points)
     z = np.zeros(all_points)
     for i in range(1, all_points):
-        # Calculate the coordinates of each point 计算每个点的坐标
+        # Calculate the coordinates of each point
         if i <= StartBent_point:
             print(i)
             x[i] = x[i - 1] + length
@@ -1005,7 +967,7 @@ def DrawWholePipe(self):
             x[i] = x[i - 1] + np.cos(Angle / 180 * np.pi) * length
             z[i] = z[i - 1] + np.sin(Angle / 180 * np.pi) * length
 
-    # Draw a picture of the pipe center line 绘制管道中心线图片
+    # Draw a picture of the pipe center line
     ax1 = self.ui.OtherFig.figure.add_subplot(1, 1, 1, label='plot3D',projection='3d')
     print('000000')
     ax1.plot3D(x[:StartBent_point], y[:StartBent_point], z[:StartBent_point], color='b')
@@ -1016,12 +978,9 @@ def DrawWholePipe(self):
     ax1.plot3D(x[EndBent_points:], y[EndBent_points:], z[EndBent_points:], color='b')
     print(x[StartBent_point:EndBent_points]
           , y[StartBent_point:EndBent_points], z[StartBent_point:EndBent_points])
-    print('text???')
-    ax1.text(x[StartBent_point], y[StartBent_point], z[StartBent_point], 'Region 0 - Blue', 'x') # Annotate key points on the diagram 图上关键点标注注释
-    print('text  1111')
-    ax1.text(x[EndBent_points], y[EndBent_points], z[EndBent_points], 'Region 1 - Red', 'x') # Annotate key points on the diagram 图上关键点标注注释
-    print('text  2222')
-    ax1.text(x[-1], y[-1], z[-1], 'Region 2 - Blue', 'x') # Annotate key points on the diagram 图上关键点标注注释
+    ax1.text(x[StartBent_point], y[StartBent_point], z[StartBent_point], 'Region 0 - Blue', 'x') # Annotate key points on the diagram
+    ax1.text(x[EndBent_points], y[EndBent_points], z[EndBent_points], 'Region 1 - Red', 'x') # Annotate key points on the diagram
+    ax1.text(x[-1], y[-1], z[-1], 'Region 2 - Blue', 'x') # Annotate key points on the diagram
     print('111111')
     # print('x',x)
     # print('y', y)

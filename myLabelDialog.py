@@ -15,17 +15,17 @@ from PyQt5.QtWidgets import QApplication,QDialog
 
 class QmyLabelDialog(QDialog):
     def __init__(self, parent=None, column=None):
-        super().__init__(parent)  # 调用父类构造函数，创建窗体
-        self.ui = Ui_DataLabel_select2()  # 创建UI对象
-        self.ui.setupUi(self)  # 构造UI界面
+        super().__init__(parent)  # Call the parent class constructor to create a form
+        self.ui = Ui_DataLabel_select2()  # Creating UI Objects
+        self.ui.setupUi(self)  # Constructing the UI interface
 
         self.ui.comboBox.clear()
         self.ui.comboBox.addItems(column)
         self.index = -1
 
 
-    def __del__(self):  # 析构函数
-        print("QmyDialogHeaders 对象被删除了")
+    def __del__(self):  # Destructor
+        print("QmyDialogHeaders: The object was deleted")
 
     @pyqtSlot(bool)
     def on_Yes_clicked(self):
@@ -36,10 +36,10 @@ class QmyLabelDialog(QDialog):
         self.index = -1
 
 
-##  ============窗体测试程序 ================================
-if  __name__ == "__main__":         #用于当前窗体测试
-   app = QApplication(sys.argv)     #创建GUI应用程序
-   form=QmyLabelDialog(column=['1','2','3','4','5'])          #创建窗体
+##  ====================Form Tester========================
+if  __name__ == "__main__":         # For testing the current form
+   app = QApplication(sys.argv)     # Creating GUI Applications
+   form=QmyLabelDialog(column=['1','2','3','4','5'])          # Create a form
    form.show()
    sys.exit(app.exec_())
 

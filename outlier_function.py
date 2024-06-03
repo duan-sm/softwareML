@@ -9,7 +9,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 
 
-##3sigma原则
+## 3sigma principle
 def threesigma(data
                , n=3
                , results_s='p'
@@ -23,26 +23,20 @@ def threesigma(data
             Start year, end time, out-of-range value, time index of out-of-range data, and sequential index of out-of-range data
             "p" stands for parts, including results, results_x, and index
             [results, results_x, index]
-              *****************************************
-              “a”代表全部，包括results, results_x, index,mintime,maxtime,outlier,outlier_x,outlier_index
-              分别代表：筛选后的结果、结果时间索引、结果顺序索引、
-                        起始年份、结束时间、超出范围的数值、超出范围数据的时间索引、超出范围数据的顺序索引
-              “p”代表部分，包括results, results_x, index
-              [results, results_x, index]
     '''
-    data_x = data.index.tolist()  ##Get the time of the time series | 获取时间序列的时间
+    data_x = data.index.tolist()  ##Get the time of the time series
     # print (data_x)
     # print ("**********",j)
-    mintime = data_x[0]  ##Gets the starting point of the time series | 获取时间序列的起始年份
-    maxtime = data_x[-1]  ##Gets the ending point of the time series | 获取时间序列的结束年份
+    mintime = data_x[0]  ##Gets the starting point of the time series
+    maxtime = data_x[-1]  ##Gets the ending point of the time series
 
-    data_y = data.values.tolist()  ##Gets the time series value | 获取时间序列数值
-    ymean = np.mean(data_y)  ##Find the time series average | 求时间序列平均值
-    ystd = np.std(data_y)  ##Find the standard deviation of time series | 求时间序列标准差
-    down = ymean - n * ystd  ##Compute lower bound | 计算下界
-    up = ymean + n * ystd  ##Compute upper bound | 计算上界
+    data_y = data.values.tolist()  ##Gets the time series value
+    ymean = np.mean(data_y)  ##Find the time series average
+    ystd = np.std(data_y)  ##Find the standard deviation of time series
+    down = ymean - n * ystd  ##Compute lower bound
+    up = ymean + n * ystd  ##Compute upper bound
 
-    outlier = []  # Save the outlier | 将异常值保存
+    outlier = []  # Save the outlier
     outlier_x = []
     outlier_index = []
     results = []  # The results after screening
@@ -59,12 +53,11 @@ def threesigma(data
             index.append(i)
     if detail:
         # Test function uses code, prints variables, has no effect
-        # 测试函数使用代码，打印变量，无作用
-        print('变量的名字为：', data.name)
-        print('计算下界down,计算上界up:', down, up)
-        print('数据的下界down,数据的上界up:', np.min(data_y), np.max(data_y))
-        print('原数据量为：%d，现有数据量为：%d' % (len(data), len(index)))
-        print('删除的数据量为，', len(outlier_index))
+        print('The name of the variable is：', data.name)
+        print('Calculate the lower bound down, calculate the upper bound up:', down, up)
+        print('The lower bound of the data is down, and the upper bound of the data is up:', np.min(data_y), np.max(data_y))
+        print('The original data volume is: %d, the current data volume is: %d' % (len(data), len(index)))
+        print('The amount of data deleted is,', len(outlier_index))
         print('*' * 50)
     if results_s == 'a':
         return [results, results_x, index, down, up, outlier, outlier_x, outlier_index]
@@ -75,11 +68,9 @@ def threesigma(data
 def find_same_diff_num(num1, num2):
     '''
     Look for the same and different numbers in the two lists
-    寻找两个列表中相同和不同的数字
     :param num1: list 1
     :param num2: list 2
     :return: The same number; Different numbers
-    相同的数字；不同的数字
     '''
     num1 = np.sort(list(set(num1)))
     num2 = np.sort(list(set(num2)))
@@ -242,7 +233,6 @@ def find_discontinue_data(a
                           , ind_=False):
     '''
     Input one-dimensional data, look for consecutive strings of data in the data, and return the beginning and end numbers
-    输入一维数据，寻找数据中连续的数据串，返回开始和结束的数字
     :param a: data | 数据
     :param data_long: Limit the length of continuous data, up to a certain length is regarded as continuous number | 限制连续数据的长度，达到一定长度视为连续的数
     :param lag_point: Sets the continuous length for discontinuous points | 代表对于不连续的点的，设定连续长度
@@ -251,16 +241,16 @@ def find_discontinue_data(a
     :return: ss：Discontinuous index | 不连续的索引
             sss：The value of a discontinuous index | 不连续的索引的值
     '''
-    # Use the find_continue_data function to find continuous data | 利用find_continue_data函数查找连续的数据
+    # Use the find_continue_data function to find continuous data
     _, index_list = find_continue_data(a=a
                                        , data_long=data_long
                                        , lag_point=lag_point
                                        , ind_=True)
-    # Record index | 记录索引
+    # Record index
     ss = []
-    # Record the value of index | 记录数值
+    # Record the value of index
     sss = []
-    # The above indicates that there are no continuous points, then all points are discontinuous points | 上述表明不存在连续点，则全部点为非连续点
+    # The above indicates that there are no continuous points, then all points are discontinuous points
     if len(index_list) == 0:
         for i in range(len(a)):
             ss.append([i, i])
@@ -276,8 +266,9 @@ def find_discontinue_data(a
     else:
         if index_list[0][0] == 0:
             if index_list[0][1] == len(a) - 1:
-                print('连续的索引为：', index_list, '；数据长度为：', len(a))
-                print('因此此数据没有不连续的异常点')
+                # print('连续的索引为：', index_list, '；数据长度为：', len(a))
+                # print('因此此数据没有不连续的异常点')
+                pass
             else:
                 i = 0
                 for i in range(len(index_list) - 1):

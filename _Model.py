@@ -31,7 +31,7 @@ def initial(self):
     useless
     '''
     try:
-        # Print the current page index 打印当前页面索引
+        # Print the current page index 
         index = self.ui.tabWidget.currentIndex()
         print('index=', index)
         if index == 3:
@@ -41,8 +41,8 @@ def initial(self):
             self.ui.Results3.setText('Label has been selected')
             for num in range(2, 5):
                 print('num=', num)
-                eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
-                eval('self.ui.SelectFeature%d.addItems(columns[:-4])' % num)  # 清除图表
+                eval('self.ui.SelectFeature%d.clear()' % num)  # clear fig
+                eval('self.ui.SelectFeature%d.addItems(columns[:-4])' % num)  # clear fig
             '''
             if isinstance(self.all_y, type(None)):
                 if (self._DimDialog == None):  # 未创建对话框
@@ -62,8 +62,8 @@ def initial(self):
                         self.ui.VariableOutput.setText(columns[labelIndex])
                         self.ui.Results3.setText('Label has been selected')
                         for num in range(1, 5):
-                            eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
-                            eval('self.ui.SelectFeature%d.addItems(columns[new_index])' % num)  # 清除图表
+                            eval('self.ui.SelectFeature%d.clear()' % num)  # clear fig
+                            eval('self.ui.SelectFeature%d.addItems(columns[new_index])' % num)  # clear fig
                 else:
                     self.ui.tabWidget.setCurrentIndex(0)
                     self.ui.Results.setText('Please re-select label')
@@ -82,7 +82,6 @@ def initial(self):
 
 def Initialize(self):
     '''
-    由于智能模型参数较多，通过此函数可以快速初始化模型的参数（初始参数只作为参考，并不一定适用于当前数据）
     Since there are many parameters of the intelligent model, the parameters of the model can be
      quickly initialized through this function (the initial parameters are only for reference and
      are not necessarily applicable to the current data).
@@ -109,7 +108,6 @@ def Initialize(self):
 def get_optimizer(optimizer_name, lr):
     '''
     Return to the optimizer based on the interface selection
-    根据界面的选择返回优化器
     :param optimizer_name: Optimizer name:adam adadelta adagrad rmsprop sgd
     :param lr: Learning rate
     :return: optimizer
@@ -129,11 +127,10 @@ def get_optimizer(optimizer_name, lr):
 def get_loss(loss_name, y_true, y_pre):
     '''
     According to the selection of the interface, select the loss value calculation method to return the loss value
-    根据界面的选择选定损失值计算方法返回损失值
-    :param loss_name: Loss function 损失函数
-    :param y_true: label 标签
-    :param y_pre: Predicted value 预测值
-    :return: Loss value 损失值
+    :param loss_name: Loss function
+    :param y_true: label
+    :param y_pre: Predicted value
+    :return: Loss value
     '''
     if loss_name == 'mse':
         loss_ = tf.reduce_mean(tf.losses.mse(y_true, y_pre))
@@ -156,17 +153,16 @@ def draw_LossFig(self
                  , train_loss
                  , valid_loss):
     '''
-    绘制损失值结果曲线
     Plot the loss value result curve
     :param self: class
-    :param train_loss: Training set loss value 训练集损失值
-    :param valid_loss: Validation set loss value 验证集损失值
+    :param train_loss: Training set loss value
+    :param valid_loss: Validation set loss value
     :return: none
     '''
     bwith = 1
     fontsize = 13
     # print('|1'*10)
-    self.ui.LossFig.figure.clear()  # Clear chart 清除图表
+    self.ui.LossFig.figure.clear()  # Clear chart clear fig
     font_ = {
         'family': 'Times New Roman'
         , 'weight': 'normal'
@@ -204,14 +200,9 @@ def draw_LossFig(self
     # print('|4' * 10)
     # ax1.set_xticks(new_xticks)
     # ax1.set_xticklabels(new_xticklabels, fontproperties='Times New Roman', fontsize=fontsize)
-
-    # print('|5' * 10)
     ax1.tick_params(width=bwith, length=bwith, labelsize=fontsize, direction='in')
-    # print('|5.5' * 10)
     self.ui.LossFig.figure.tight_layout()
-    # print('|6' * 10)
     self.ui.Results3.setText('loss drawing completion')
-    # self.ui.Results3.setText('loss绘图完成')
     # ax1.show()
     print('draw_LossFig|' * 10)
     self.ui.LossFig.figure.canvas.draw()
@@ -226,9 +217,7 @@ def sequences_from_indices(array, indices_ds, start_index, end_index):
     :param array: dataset
     :param indices_ds: For each initial window position, generates indices of the window elements
     :param start_index: an integer that indicates the time index from which the time window is created. The default value is 0, which means that it starts with the first timestamp.
-    整数，表示从输入数据的哪个时间索引开始创建时间窗口。默认为0，表示从第一个时间戳开始。
     :param end_index: an integer that indicates the time at which the index ends the creation time window. The default is None, which means until the end of the last timestamp.
-    整数，表示在输入数据的哪个时间索引结束创建时间窗口。默认为None，表示直到最后一个时间戳结束。
     :return: dataset
     '''
     dataset = tf.data.Dataset.from_tensors(array[start_index:end_index])
@@ -254,22 +243,19 @@ def timeseries_dataset_from_array(
         end_index=None, ):
     '''
     Convert non-time series to time series data
-    将非时间序列转化为时间序列数据
-    :param data: Represents x data, each of which is called a timestep.表示x数据，里面的每个叫做一个timestep。
-    :param targets: indicates the y label. If you do not process labels and only process data, pass targets=None.表示x数据，里面的每个叫做一个timestep。
-    :param sequence_length: The length of an output sequence sequence, that is, how many timesteps there are.一个输出序列sequence的长度，即有多少个timestep。
-    :param sequence_stride: The beginning of each sequence is separated by several timesteps. 每个sequence的开头相隔几个timestep。
+    :param data: Represents x data, each of which is called a timestep.
+    :param targets: indicates the y label. If you do not process labels and only process data, pass targets=None.
+    :param sequence_length: The length of an output sequence sequence, that is, how many timesteps there are.
+    :param sequence_stride: The beginning of each sequence is separated by several timesteps.
     For stride s, output samples would start at index data[i], data[i + s], data[i + 2 * s], etc.
-    :param sampling_rate: Sampling frequency of timestep in a sequence.  每个sequence的开头相隔几个timestep。
+    :param sampling_rate: Sampling frequency of timestep in a sequence.
     For rate r, timesteps data[i], data[i + r], … data[i + sequence_length] are used for create a sample sequence.
-    :param batch_size: Because tf.data.Dataset is returned, batch is set. 因为返回是tf.data.Dataset，所以要设定分批。
-    :param shuffle: Boolean value: indicates whether to shuffle the generated data set (random rearrangement). The default is False.布尔值，表示是否对生成的数据集进行洗牌（随机重排）。默认为False。
-    :param seed: Random number seed. 随机数种子
+    :param batch_size: Because tf.data.Dataset is returned, batch is set. 因为返回是tf.data.Dataset，
+    :param shuffle: Boolean value: indicates whether to shuffle the generated data set (random rearrangement). The default is False.
+    :param seed: Random number seed.
     :param start_index: an integer that indicates the time index from which the time window is created. The default value is 0, which means that it starts with the first timestamp.
-    整数，表示从输入数据的哪个时间索引开始创建时间窗口。默认为0，表示从第一个时间戳开始。
     :param end_index: an integer that indicates the time at which the index ends the creation time window. The default is None, which means until the end of the last timestamp.
-    整数，表示在输入数据的哪个时间索引结束创建时间窗口。默认为None，表示直到最后一个时间戳结束。
-    :return: Time series data set. 时间序列数据集
+    :return: Time series data set.
     '''
     # Validate strides
     if sampling_rate <= 0:
@@ -365,22 +351,21 @@ def MyBP(self, x_train, y_train, x_test, y_test
          , lr=0.01, batch_num=3000, style=1):
     '''
     A multi-layer BP neural network model is established.
-    建立三层BP神经网络模型。
     :param self: class
-    :param x_train: Model input train data 模型输入训练数据
-    :param y_train: Model input train data label 模型输入训练数据标签
-    :param x_test: Model input test data 模型输入测试数据
-    :param y_test: Model input test data label 模型输入测试数据标签
-    :param units: Network structure and neurons 网络结构与神经元
+    :param x_train: Model input train data
+    :param y_train: Model input train data label
+    :param x_test: Model input test data
+    :param y_test: Model input test data label
+    :param units: Network structure and neurons
     :param dropout: dropout
-    :param activation: Activation function 激活函数
+    :param activation: Activation function
     :param loss: Loss function
     :param optimizer: optimizer
-    :param epochs: Training times 训练次数
-    :param lr: Learning rate 学习率
-    :param batch_num:Batch training quantity  分批训练数量
-    :param style: Pressure-0/stress-1 压力/应力
-    :return: Trained model 训练好的模型
+    :param epochs: Training times
+    :param lr: Learning rate
+    :param batch_num:Batch training quantity
+    :param style: Pressure-0/stress-1
+    :return: Trained model
     '''
 
     self.ui.LossFig.figure.clear()
@@ -393,7 +378,7 @@ def MyBP(self, x_train, y_train, x_test, y_test
     if self.state != 0 and self.state != 1:
         dlgTitle = "Tips"
         strInfo = ("Please normalize or reduce dimension.")
-        defaultBtn = QMessageBox.NoButton  # Default button 缺省按钮
+        defaultBtn = QMessageBox.NoButton  # Default button
         result = QMessageBox.question(self, dlgTitle, strInfo,
                                       QMessageBox.Yes,
                                       defaultBtn)
@@ -403,7 +388,7 @@ def MyBP(self, x_train, y_train, x_test, y_test
     # if self.state == 1:
     #     NondimenBtn(self, y_test)
     print('*2' * 10)
-    # Create a folder to save the model and results 创建保存模型和结果的文件夹
+    # Create a folder to save the model and results
     if not os.path.exists('./res/model'):
         os.makedirs('./res/model')
     if not os.path.exists('./res/history'):
@@ -424,11 +409,11 @@ def MyBP(self, x_train, y_train, x_test, y_test
     model.add(Dense(units=units[0], input_shape=(None, x_train.shape[1])
                     , activation=activation, kernel_initializer='random_uniform',
                     bias_initializer='zeros'))
-    model.add(Dropout(rate=dropout))  # Prevent overfitting 防止过拟合
+    model.add(Dropout(rate=dropout))  # Prevent overfitting
     for unit in range(1, len(units)):
         model.add(Dense(units=units[unit], activation=activation, kernel_initializer='random_uniform',
                         bias_initializer='zeros'))
-        model.add(Dropout(rate=dropout))  # Prevent overfitting 防止过拟合
+        model.add(Dropout(rate=dropout))  # Prevent overfitting
         net_ = net_ + '_' + str(units[unit])
     if style == 0:
         model.add(Dense(units=1, activation='sigmoid'))
@@ -440,12 +425,6 @@ def MyBP(self, x_train, y_train, x_test, y_test
     filepath = './res/model/BP+{}+{}+{}+{}+{}.h5'.format(net_, activation, dropout, lr,
                                                          epochs)  # 保存最优权重.units+dropout+lr+act+epochs
     if s_m == 'S':
-        # if style == 0:
-        #     pd.DataFrame([self.mean_, self.var_],
-        #                  columns=['x', 'y', 'z', 'mean', 'p', 'stress1', 'stress2', 'no']).to_csv(
-        #         './res/model/BP+{}+{}+{}+{}+{}+standard_para.csv'.format(net_, activation, dropout, lr,
-        #                                                                  epochs), index=False)
-
         pd.DataFrame([self.mean_, self.var_], columns=self.workbook.columns, index=['mean', 'var']).to_csv(
             './res/model/BP+{}+{}+{}+{}+{}+standard_para.csv'.format(net_, activation, dropout, lr,
                                                                      epochs), index=False)
@@ -473,8 +452,7 @@ def MyBP(self, x_train, y_train, x_test, y_test
             grads = tape.gradient(train_loss, model.trainable_variables)
             train_loss_bs.append(train_loss.numpy())
             opt.apply_gradients(zip(grads, model.trainable_variables))
-        # 测试集
-        #             model.save(r'G:\F盘\0论文\压力信号小波分析约束下的气侵预警模型\出口流量公式'+'\\'+str(units)+'\\'+str(i)+'.h5')
+        # test set
         train_loss_sum.append(np.mean(train_loss_bs))
         out = model(x_valid) # Validate the model using validation data sets
         valid_loss = get_loss(loss_name=loss, y_true=y_valid, y_pre=out)  # tf.reduce_mean(tf.losses.mape(y_valid, out))
@@ -520,15 +498,12 @@ def MyBP(self, x_train, y_train, x_test, y_test
     #                                                      epochs), index=False)
     '''
     # print('*7' * 10)
-    # 导入模型进行测试
     # start = t.perf_counter()
-    model_saved = load_model(filepath) # Save model 保存模型
+    model_saved = load_model(filepath) # Save model
     y_pred = model_saved.predict(x_test)
     # end = t.perf_counter()
     y_pred = np.array(y_pred).flatten()
     print(y_pred)
-    # print('V最大值:', np.max(data['V']))
-    # print('V最小值:', np.min(data['V']))
     # y_pred_it = inverse_transform(y_pred, np.max(data['V']), np.min(data['V']))
     # y_test_it = inverse_transform(y_test, np.max(data['V']), np.min(data['V']))
 
@@ -559,11 +534,10 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
     """
     The overall process is the same as MyBP function.
     The LSTM neural network model is established.
-    建立LSTM神经网络模型。
-    :param units:Number of hidden layer neurons, default 100. 隐藏层神经元数，默认100。
-    :param activations:Activate function, default 'relu'. 激活函数，默认‘relu’。
-    :param dropout:Random inactivation ratio, default 0.2.随机失活比例，默认0.2。
-    :param lr:Learning rate, default is 0.01.学习率，默认0.01。
+    :param units:Number of hidden layer neurons, default 100.
+    :param activations:Activate function, default 'relu'.
+    :param dropout:Random inactivation ratio, default 0.2.
+    :param lr:Learning rate, default is 0.01.
     :return:Model.模型。
     """
     print('RUN myLSTM function  ')
@@ -672,8 +646,7 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
             train_loss_bs.append(train_loss.numpy())
             opt.apply_gradients(zip(grads, model.trainable_variables))
         print('start compute')
-        # 测试集
-        #             model.save(r'G:\F盘\0论文\压力信号小波分析约束下的气侵预警模型\出口流量公式'+'\\'+str(units)+'\\'+str(i)+'.h5')
+        # test set
         train_loss_sum.append(np.mean(train_loss_bs))
         print('train_loss_sum.append')
         for batch in dataset_valid.take(1):
@@ -706,7 +679,7 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
     print('net_=', net_)
     print('myLSTM 5 ' * 10)
     # print('*7' * 10)
-    # 导入模型进行测试
+    # Import the model for testing
     # start = t.perf_counter()
     for batch in dataset_test.take(1):
         inputs, targets = batch
@@ -715,10 +688,6 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
     # end = t.perf_counter()
     y_pred = np.array(y_pred).flatten()
     print(y_pred)
-    # print('V最大值:', np.max(data['V']))
-    # print('V最小值:', np.min(data['V']))
-    # y_pred_it = inverse_transform(y_pred, np.max(data['V']), np.min(data['V']))
-    # y_test_it = inverse_transform(y_test, np.max(data['V']), np.min(data['V']))
 
     bp_mse = metrics.mean_squared_error(targets, y_pred)
     bp_mae = metrics.mean_absolute_error(targets, y_pred)
@@ -746,7 +715,6 @@ def MyLSTM(self, dataset_train, dataset_valid, dataset_test
 
 def Compute(self):
     '''
-    将数据以7:3分为验证集与训练集。按照设定参数进行模型训练与验证。
     The data is divided into validation set and training set by 7:3.
     The model is trained and verified according to the set parameters.
     '''
@@ -880,25 +848,25 @@ def Compute(self):
             dataset_train = timeseries_dataset_from_array(
                 x_train,
                 y_train,
-                sequence_length=sequence_length,  # Exp: One batch was collected 120 times 一批采集120次
+                sequence_length=sequence_length,  # Exp: One batch was collected 120 times
                 sequence_stride=sequence_stride,
-                sampling_rate=step,  # Exp:Collect once in 6 steps, that is, once in 60 minutes 6步采集一次，即 60分钟采集一次
+                sampling_rate=step,  # Exp:Collect once in 6 steps, that is, once in 60 minutes
                 batch_size=batch_size,
             )
             dataset_valid = timeseries_dataset_from_array(
                 x_train,
                 y_train,
-                sequence_length=sequence_length,  # 一批采集120次
+                sequence_length=sequence_length,
                 sequence_stride=sequence_stride,
-                sampling_rate=step,  # 6步采集一次，即 60分钟采集一次
+                sampling_rate=step,
                 batch_size=len(y_train) + 1,
             )
             dataset_test = timeseries_dataset_from_array(
                 x_test,
                 y_test,
-                sequence_length=sequence_length,  # 一批采集120次
+                sequence_length=sequence_length,
                 sequence_stride=sequence_stride,
-                sampling_rate=step,  # 6步采集一次，即 60分钟采集一次
+                sampling_rate=step,
                 batch_size=len(y_test) + 1,
             )
             # Build model

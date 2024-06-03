@@ -16,54 +16,54 @@ from PyQt5.QtWidgets import QVBoxLayout
 
 
 class QmyFigureCanvas(QWidget):
-    mouseMove = QtCore.pyqtSignal(numpy.float64, mpl.lines.Line2D)  # 自定义触发信号，用于与UI交互
+    mouseMove = QtCore.pyqtSignal(numpy.float64, mpl.lines.Line2D)  # Custom trigger signals for interaction with the UI
     def __init__(self, parent=None, toolbarVisible=True, showHint=False):
         super().__init__(parent)
 
-        self.figure = Figure()  # 公共的figure属性
-        figCanvas = FigureCanvas(self.figure)  # 创建FigureCanvas对象，必须传递一个Figure对象
-        self.naviBar = NavigationToolbar(figCanvas, self)  # 公共属性naviBar
+        self.figure = Figure()  # Public figure properties
+        figCanvas = FigureCanvas(self.figure)  # To create a FigureCanvas object, you must pass a Figure object
+        self.naviBar = NavigationToolbar(figCanvas, self)  # Public property naviBar
 
-        self.__changeActionLanguage()  # 改为汉语
+        # self.__changeActionLanguage()  # Change to Chinese
 
-        actList = self.naviBar.actions()  # 关联的Action列表
-        count = len(actList)  # Action的个数
-        self.__lastActtionHint = actList[count - 1]  # 最后一个Action,坐标提示标签
-        self.__showHint = showHint  # 是否在工具栏上显示坐标提示
-        self.__lastActtionHint.setVisible(self.__showHint)  # 隐藏其原有的坐标提示
-        self.__showToolbar = toolbarVisible  # 是否显示工具栏
+        actList = self.naviBar.actions()  # List of associated actions
+        count = len(actList)  # Number of Actions
+        self.__lastActtionHint = actList[count - 1]  # The last Action, coordinate prompt label
+        self.__showHint = showHint  # Whether to display coordinate hints on the toolbar
+        self.__lastActtionHint.setVisible(self.__showHint)  # Hide its original coordinate prompt
+        self.__showToolbar = toolbarVisible  # Whether to display the toolbar
         self.naviBar.setVisible(self.__showToolbar)
 
         layout = QVBoxLayout(self)
-        layout.addWidget(self.naviBar)  # 添加工具栏
-        layout.addWidget(figCanvas)  # 添加FigureCanvas对象
+        layout.addWidget(self.naviBar)  # Add a toolbar
+        layout.addWidget(figCanvas)  # Adding a FigureCanvas Object
         layout.setContentsMargins(0, 0, 0, 0)
         layout.setSpacing(0)
 
         # 鼠标滚轮缩放
-        self.__cid = figCanvas.mpl_connect("scroll_event", self.do_scrollZoom)  # 支持鼠标滚轮缩放
-        self.__cid1 = figCanvas.mpl_connect("pick_event", self.do_series_pick)  # 支持曲线抓取
-        # self.__cid2 = figCanvas.mpl_connect("button_press_event",self.do_pressMouse)#支持鼠标按下
-        self.__cid3 = figCanvas.mpl_connect("button_release_event", self.do_releaseMouse)  # 支持鼠标释放
-        self.__cid4 = figCanvas.mpl_connect("motion_notify_event", self.do_moveMouse)  # 支持鼠标移动
+        self.__cid = figCanvas.mpl_connect("scroll_event", self.do_scrollZoom)  # Support mouse wheel zoom
+        self.__cid1 = figCanvas.mpl_connect("pick_event", self.do_series_pick)  # Support curve capture
+        # self.__cid2 = figCanvas.mpl_connect("button_press_event",self.do_pressMouse) # Support mouse click
+        self.__cid3 = figCanvas.mpl_connect("button_release_event", self.do_releaseMouse)  # Support mouse release
+        self.__cid4 = figCanvas.mpl_connect("motion_notify_event", self.do_moveMouse)  # Support mouse movement
         self.mouseIsPress = False
         self.pickStatus = False
 
 
-    ##=====公共接口函数
-    def setToolbarVisible(self, isVisible=True):  ##是否显示工具栏
+    ##=====Public interface functions
+    def setToolbarVisible(self, isVisible=True):  ## Whether to display the toolbar
         self.__showToolbar = isVisible
         self.naviBar.setVisible(isVisible)
 
-    def setDataHintVisible(self, isVisible=True):  ##是否显示工具栏最后的坐标提示标签
+    def setDataHintVisible(self, isVisible=True):  ## Whether to display the last coordinate prompt label of the toolbar
         self.__showHint = isVisible
         self.__lastActtionHint.setVisible(isVisible)
 
-    def redraw(self):  ##重绘曲线,快捷调用
+    def redraw(self):  ## Redraw the curve, quick call
         self.figure.canvas.draw()
 
-    def __changeActionLanguage(self):  ##汉化工具栏
-        actList = self.naviBar.actions()  # 关联的Action列表
+    def __changeActionLanguage(self):  ## Chinese toolbar
+        actList = self.naviBar.actions()  # List of associated actions
         actList[0].setText("复位")  # Home
         actList[0].setToolTip("复位到原始视图")  # Reset original view
 
@@ -88,12 +88,12 @@ class QmyFigureCanvas(QWidget):
         actList[9].setText("保存")  # Save
         actList[9].setToolTip("保存图表")  # Save the figure
 
-    def do_scrollZoom(self, event):  # 通过鼠标滚轮缩放
-        ax = event.inaxes  # 产生事件axes对象
+    def do_scrollZoom(self, event):  # Zooming with the mouse wheel
+        ax = event.inaxes  # Generate event axes object
         if ax == None:
             return
 
-        self.naviBar.push_current()  # Push the current view limits and position onto the stack，这样才可以还原
+        self.naviBar.push_current()  # Push the current view limits and position onto the stack，This will restore
         xmin, xmax = ax.get_xbound()
         xlen = xmax - xmin
         ymin, ymax = ax.get_ybound()
@@ -111,7 +111,7 @@ class QmyFigureCanvas(QWidget):
         event.canvas.draw()
 
 
-    def do_series_pick(self, event):  # picker事件获取抓取曲线
+    def do_series_pick(self, event):  # The picker event gets the captured curve
         self.series = event.artist
         # index = event.ind[0]
         # print("series",event.ind)
@@ -119,7 +119,7 @@ class QmyFigureCanvas(QWidget):
             self.pickStatus = True
 
 
-    def do_releaseMouse(self, event):  # 鼠标释放，释放抓取曲线
+    def do_releaseMouse(self, event):  # Mouse release, release grab curve
         if event.inaxes == None:
             return
         if self.pickStatus == True:
@@ -129,11 +129,11 @@ class QmyFigureCanvas(QWidget):
         # self.mouseRelease.emit(event.xdata,event.ydata)
 
 
-    def do_moveMouse(self, event):  # 鼠标移动，重绘抓取曲线
+    def do_moveMouse(self, event):  # Move the mouse and redraw the grab curve
         if event.inaxes == None:
             return
         if self.pickStatus == True:
             self.series.set_xdata([event.xdata, event.xdata])
             self.series.set_color(color="red")
             self.figure.canvas.draw()
-            self.mouseMove.emit(event.xdata, self.series)  # 自定义触发信号，用于与UI交互
+            self.mouseMove.emit(event.xdata, self.series)  # Custom trigger signals for interaction with the UI

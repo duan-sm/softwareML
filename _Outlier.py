@@ -10,7 +10,6 @@
 """
 
 from outlier_function import *
-from plotting_function import draw_curve
 import numpy as np
 from PyQt5.QtWidgets import *
 from PyQt5.QtCore import Qt
@@ -45,8 +44,8 @@ def SaveDataBtn(self):
         self.ui.InputDataTableView.resizeColumnsToContents()
         # 初始化可以选择绘制的特征
         for num in range(2, 5):
-            eval('self.ui.SelectFeature%d.clear()' % num)  # 清除图表
-            eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # 清除图表
+            eval('self.ui.SelectFeature%d.clear()' % num)  # clear fig
+            eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # clear fig
         print('*'*20,np.arange(rows),'*'*20)
         # 在table中显示数据
         for i in range(rows):
@@ -79,14 +78,13 @@ def Outlier(self
               , path):
     '''
     The modified 3 sigma is used to determine outliers for each feature in the data.
-    异常值处理
-    :param original_data: The DataFrame that stores the logging data 存储录井数据的DataFrame
-    :param path: Save the analysis DataFrame after the analysis is complete 分析结束后保存分析结果DataFrame
-    :return: Result after the outlier is deleted 删除异常值后的结果
+    :param original_data: The DataFrame that stores the logging data 
+    :param path: Save the analysis DataFrame after the analysis is complete 
+    :return: Result after the outlier is deleted 
     '''
     print('Outlier is processing')
     data = original_data.copy()
-    # Outlier processing and visualization 异常值处理与可视化
+    # Outlier processing and visualization 
     col = data.columns
     i_index = []
     self.index_ = []
@@ -95,42 +93,38 @@ def Outlier(self
         _ = threesigma(data[col[i]]
                        , detail=False
                        , results_s='a'
-                       , n=3) # 3 Sigma outlier screening 3西格玛异常值筛选
+                       , n=3) # 3 Sigma outlier screening 
         out_index = _[-1]
         i_index.append(i)
-        # All abnormal indexes are stored 所有的异常索引存储
+        # All abnormal indexes are stored 
         self.index_.append(out_index)
-    print('The initial outlier calculation is complete') # The initial outlier calculation is complete 初始异常点计算结束
+    print('The initial outlier calculation is complete') # The initial outlier calculation is complete 
     print(' ' * 5 + '*' * 5)
 
-    # The number of outliers is counted 对异常点数量进行统计
+    # The number of outliers is counted 
     for i in range(len(self.index_)):
         print(i_index[i], col[i_index[i]])
         len_data = len(data)
         if len(self.index_[i]) == 0:
             self.ui.ResultsText1.append('\n')
-            # self.ui.ResultsText1.append('%s无异常值' % col[i_index[i]].split('\n')[0])
             self.ui.ResultsText1.append('%s No outliers' % col[i_index[i]].split('\n')[0])
             continue
         if len(self.index_[i]):
             self.ui.ResultsText1.append('\n')
             self.ui.ResultsText1.append(' ' * 5 + '*' * 5)
-            # self.ui.ResultsText1.append('%s的异常值数量为：%d' % (col[i_index[i]].split('\n')[0], len(self.index_[i])))
             self.ui.ResultsText1.append(
                 'The number of outliers in %s is: %d' % (col[i_index[i]].split('\n')[0], len(self.index_[i])))
     data_copy_ = np.array(data.values)
 
-    # Print the number of outliers in ResultsText1 在ResultsText1中打印异常点数量情况
+    # Print the number of outliers in ResultsText1 
     for i in range(len(self.index_)):
         if len(self.index_[i]) == 0:
             continue
         self.ui.ResultsText1.append('\n')
         self.ui.ResultsText1.append(' ' * 5 + '*' * 5)
-        # self.ui.ResultsText1.append('序号%d特征：%s，异常值数量变化情况:' % (i, col[i_index[i]].split('\n')[0]))
         self.ui.ResultsText1.append(
             'Serial number %d feature: %s, changes in the number of outliers:' % (i, col[i_index[i]].split('\n')[0]))
         # Use the find_discontinue_data function to find and correct for continuous outliers
-        # 使用find_discontinue_data函数查找连续的异常点，并进行修正
         _, in_ = find_discontinue_data(self.index_[i], data_long=10, ind_=True)
         num = 0
         adjust_index = []
@@ -139,30 +133,22 @@ def Outlier(self
             adjust_index.extend(self.index_[i][j[0]:j[1] + 1])
         self.ui.ResultsText1.append('The original quantity %d ' % (len(self.index_[i])))
         self.index_[i] = adjust_index
-        # self.ui.ResultsText1.append('原来数量%d,变为%d' % (len(self.index_[i]), num))
         self.ui.ResultsText1.append('becomes %d' % (num))
 
-    # Count how many points there are 统计一共有多少个点
+    # Count how many points there are 
     list_ = self.index_[0]
     for i in range(1, len(self.index_)):
         list_ = np.concatenate((list_, self.index_[i]))
     # self.ui.ResultsText1.append('-' * 5 + ' 结论 ' + '-' * 5)
-    # self.ui.ResultsText1.append('原始异常点数据量共：%d' % len(data))
     self.ui.ResultsText1.append('-' * 5 + ' CONCLUSION ' + '-' * 5)
-    # self.ui.ResultsText1.append('原始异常点数据量共：%d' % len(data))
     self.ui.ResultsText1.append('Total number of outliers data: %d' % len(list_))
     list_ = np.sort(list(set(list_)))
-    # self.ui.ResultsText1.append('修正后异常点数量共：%d' % len(np.sort(list(set(list_)))))
     self.ui.ResultsText1.append('Total number of outliers after correction: %d' % len(np.sort(list(set(list_)))))
     ab_point2 = find_same_diff_num(list_, np.arange(len(data)))
     if path:
-        # data.iloc[ab_point2[1], :].to_csv(path + r'\处理异常值后的数据.csv'
-        #                                   , encoding='gb18030')
         data.iloc[ab_point2[1], :].to_csv(path + r'\DataAfterOutliers.csv'
                                           , encoding='gb18030')
     else:
-        # data.iloc[ab_point2[1], :].to_csv('...//处理异常值后的数据.csv'
-        #                                   , encoding='gb18030')
         data.iloc[ab_point2[1], :].to_csv('...//DataAfterOutliers.csv'
                                           , encoding='gb18030')
 
@@ -186,7 +172,7 @@ def OutlierDraw(self
     self.ui.EndWD.setEnabled(False)
     for vvv in ['FeatureFig2']:
     # for vvv in ['FeatureFig2', 'OtherFig']:
-        eval('self.ui.%s.figure.clear()' % vvv)  # 清除图表
+        eval('self.ui.%s.figure.clear()' % vvv)  # clear fig
     index = self.ui.SelectFeature2.currentIndex()
     print('plot(绘图)index=%d' % index)
 
@@ -200,10 +186,10 @@ def OutlierDraw(self
     EMD = float(self.ui.EndWD.text())
     if EMD < 1e-1:
         truncted = False
-        print('不截断')
+        print('No truncted')
     else:
         truncted = True
-        print('截断')
+        print('truncted')
 
     col = self.workbook.columns
     data_copy_ = np.array(self.workbook.values)
@@ -244,7 +230,6 @@ def OutlierDraw(self
         self.ui.DataOutlierDraw1.setCheckable(False)
 
     for vvv in ['FeatureFig2']: # plot figure for outlier
-    # for vvv in ['FeatureFig2', 'OtherFig']:
         ax1 = eval('self.ui.%s.figure.add_subplot(1, 1, 1, label=fea)' % vvv)
         print('self.ui.DataOutlierDraw1.isChecked()')
         print(self.ui.DataOutlierDraw1.isChecked())
@@ -253,8 +238,6 @@ def OutlierDraw(self
                      label=fea)
             ax1.scatter(self.workbook.iloc[ab_point[0], index].values, ab_point[0],
                         c='b', label='Outliers')
-            # self.ui.Results2.setText('%s:序号为%d，异常点数量为%d; 井深%.2f-%.2f' % (
-            #     col[judge_var_index].split('\n')[0], index, len(ab_point[0]), SMD, EMD))
             self.ui.Results2.setText('%s: index = %d, number of outlier=%d' % (
                 col[judge_var_index].split('\n')[0], index, len(ab_point[0])))
 
@@ -265,7 +248,6 @@ def OutlierDraw(self
                      label=fea)
         ax1.legend()
         ax1.set_xlabel(fea, fontsize=fontsize)
-        # ax1.set_ylabel('井深', fontsize=fontsize)
         ax1.set_ylabel('Number', fontsize=fontsize)
         ax1.set_title(fea, fontsize=fontsize)
         ax1.spines['bottom'].set_linewidth(bwith)
@@ -276,7 +258,6 @@ def OutlierDraw(self
         ax1.tick_params(width=bwith, length=bwith * 2, labelsize=fontsize, direction='in')
         eval('self.ui.%s.figure.tight_layout()' % vvv)
         eval('self.ui.%s.figure.canvas.draw()' % vvv)
-    # self.ui.Results2.setText('%s绘图完成' % self.workbook.columns[index].split('\n')[0])
     self.ui.Results2.setText('%s draw is completed' % self.workbook.columns[index].split('\n')[0])
     print('ab_point')
     ab_point = find_same_diff_num(self.index_[index], np.arange(len(self.workbook)))
@@ -290,11 +271,6 @@ def OutlierDraw(self
     print(np.array(count_point))
     print(col[judge_var_index], )
     print(self.ui.DataOutlierDraw1.isChecked())
-    # if self.size_ == 0:
-    #     qwer = '井深\nm'
-    # else:
-    #     qwer = '井深'
-    # print(self.workbook[qwer].values)
     print('%s Modified outliers(修正后的异常点)' % col[judge_var_index].split('\n')[0])
     print(path)
     # draw_curve(data_copy_[:, judge_var_index]
