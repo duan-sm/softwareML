@@ -132,11 +132,53 @@ def Regression(self):
     equation_str = equation_str.replace('_', '')
     equation_str_len = len(equation_str)
     epoch = equation_str_len//len_limited+1
-    equation_str_new = 'pmax='+ '\n' +equation_str[:len_limited] + '\n'
+    equation_str_new = 'x1:Radius   x2:Angle'+'\n\n'
+    equation_str_new = equation_str_new + 'pmax='+ '\n' +equation_str[:len_limited] + '\n'
     for i in range(1,epoch):
         equation_str_new += equation_str[i * len_limited:(i + 1) * len_limited] + '\n'
-    print('print',equation_str_new)
+    MSE = np.mean((predict_y-y)**2)
+    RMSE = np.sqrt(np.mean((predict_y-y)**2))
+    R2 = 1 - ((predict_y - y) ** 2).sum() / ((y.mean() - y) ** 2).sum()
+    MRE = np.mean((predict_y-y)/y)
+    equation_str_new = equation_str_new + '\n' + 'MSE=%.3f,RMSE=%.3f,R2=%.3f,MRE=%.3f'%(MSE, RMSE, R2, MRE)
     self.ui.Eqution.setText(equation_str_new)
+
+    bwith = 1
+    fontsize = 13
+    print('Regression 0 '*3)
+    self.ui.plotR.figure.clear()  # Clear chart clear fig
+    ax = self.ui.plotR.figure.add_subplot(1, 1, 1, label='plot3D')
+    data_plot = np.concatenate((data, predict_y.reshape((len(p_maxs), 1))), axis=1)
+    radius = data_plot[:, 0]
+    num = np.sort(list(set(radius)))
+    label = ['o', '^', '<', '.', 'x', '+', 's', 'd']
+    c_max = 0
+    print('Regression 1 ' * 3)
+    for i in range(len(num)):
+        exec('num_%d = np.where(radius==num[%d])[0]' % (i, i))
+        data_new = eval(f'data_plot[num_{i}]')  # [raduis,angle,values,values_e]
+        x = data_new[:, 3]
+        y = data_new[:, 2]
+        c = np.array(data_new[:, 1] / 10, dtype=int)
+        if c_max<np.max(c)+1:
+            c_max = np.max(c)+1
+        p = ax.scatter(x, y, marker=label[i], c=c, label=f'Radius={num[i]}')
+    cbar = ax.figure.colorbar(p, ax=ax)
+    cbar.ax.set_ylabel('Angle', rotation=-90, va="bottom", fontdict={'family': 'Times New Roman'})
+    print('Regression 2 ' * 3)
+    for size in cbar.ax.get_yticklabels():
+        size.set_fontname('Times New Roman')
+    cbar.ax.set_yticks(np.arange(c_max))
+    cbar.ax.set_yticklabels(np.arange(c_max) * 10)
+    (x_d, x_u) = ax.get_xbound()
+    (y_d, y_u) = ax.get_ybound()
+    print('Regression 3 ' * 3)
+    ax.plot([x_d, x_u], [y_d, y_u], c='k')
+    ax.legend()
+    self.ui.plotR.figure.tight_layout()
+    self.ui.plotR.figure.canvas.draw()
+
+    print('Regression 4 ' * 3)
     return equation, [equationx, equationy, equationz] #
 
 def ComputeR(self, equation, equation_):
