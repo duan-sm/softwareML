@@ -79,6 +79,8 @@ class MainWindow(QMainWindow):
         self.ui.DrawSliceT.setEnabled(False)
         self.ui.ModelTypeSelect.setCurrentIndex(0)
         self.ui.Model_tab.setCurrentIndex(0)
+
+        self.FolderPath=False
     # page changed after the prompt page改变后提示
     @pyqtSlot(int)
     def on_tabWidget_currentChanged(self):
@@ -451,13 +453,26 @@ class MainWindow(QMainWindow):
     Regression_interface
     '''
     @pyqtSlot(bool)
+    def on_SelectFolder_clicked(self):
+        try:
+            self.FolderPath = SelectFolder(self)
+            self.ui.RegresionTip.setText('Folder is OK')
+        except:
+            self.ui.RegresionTip.setText('Please select Folder')
+
+    @pyqtSlot(int)
+    def on_VariableList_currentIndexChanged(self):
+        pass
+        # try:
+        #     self.ui.RegresionTip.setText('Please input the right parameters')
+
+    @pyqtSlot(bool)
     def on_Regression_clicked(self):
         try:
-            print('??')
-            self.equation, self.equation_ = Regression(self)
-            print('??')
+            self.equation, self.equation_ = Regression(self, self.FolderPath)
+            self.ui.RegresionTip.setText('Regression is completed')
         except:
-            self.ui.RegresionTip.setText('Please input the right parameters')
+            self.ui.RegresionTip.setText('Please select Folder and input the right parameters')
 
     @pyqtSlot(bool)
     def on_ComputeR_clicked(self):
