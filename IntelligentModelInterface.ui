@@ -2850,7 +2850,7 @@ Analysis</string>
                   <string/>
                  </property>
                  <property name="placeholderText">
-                  <string>Example: 12</string>
+                  <string>Example: 01</string>
                  </property>
                 </widget>
                </item>

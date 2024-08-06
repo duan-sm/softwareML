@@ -25,23 +25,34 @@ def SelectFolder(self):
     :param self:
     :return: the path of Folder
     '''
-    print('1'*10)
+    # print('1'*10)
     cb_count = self.ui.VariableList.count()
-    print('cb_count', cb_count)
+    # print('cb_count', cb_count)
     if cb_count==0:
         pass
     else:
         self.ui.VariableList.clear()
-    print('2' * 10)
+    # print('2' * 10)
     folder_path = QFileDialog.getExistingDirectory(self, "Select Folder")
     files = os.listdir(folder_path)
-    print('3' * 10)
+    # print('3' * 10)
     i = 0
     data = pd.read_csv(folder_path + '\\' + files[i])
     columns = data.columns
-    print('4' * 10)
+    # print('4' * 10)
     self.ui.VariableList.addItems(columns)
-    print('5' * 10)
+    # print('5' * 10)
+
+    files = os.listdir(folder_path)
+    file_name_split_ = files[0].split('.')[0]
+    file_name_split = file_name_split_.split('_')
+    index_ = np.arange(len(file_name_split))[:-1]
+    str_ = ''
+    for i in range(len(index_)):
+        str_ = str_ + str(index_[i])
+    self.ui.InputPara.setText(str_)
+    # radius = int(file_name_split[1][0])
+    # degree = int(file_name_split[2])
     return folder_path
 
 
@@ -60,6 +71,14 @@ def Regression(self, folder_path):
     print('Degree',Degree)
     files = os.listdir(folder_path)
     variable_name = self.ui.VariableList.currentText()
+
+    para_index_ = self.ui.InputPara.text()
+    para_index = []
+    for _ in para_index_:
+        para_index.append(int(_))
+    print('para_index_', para_index_)
+    InputParaName = np.array(['Radius', 'Angle'])
+
     positions = []
     p_maxs = []
     radiuses = []
@@ -69,10 +88,19 @@ def Regression(self, folder_path):
     for i in range(len(files)):
         file_name_split_ = files[i].split('.')[0]
         file_name_split = file_name_split_.split('_')
-        radius = int(file_name_split[1][0])
-        degree = int(file_name_split[2])
-        radiuses.append(radius)
-        degrees.append(degree)
+        all_data_ = []
+        for _ in range(1,len(file_name_split)):
+            if _ == 1:
+                x = int(file_name_split[1][:-1])
+            elif _ == 2:
+                x = int(file_name_split[_])/180*np.pi
+            else:
+                x = int(file_name_split[_])
+            all_data_.append(x)
+        # radius = int(file_name_split[1][:-1])
+        # degree = int(file_name_split[2])
+        # radiuses.append(radius)
+        # degrees.append(degree)
 
         print('index=', i, 'file name=', files[i])
         data = pd.read_csv(folder_path + '\\' + files[i])
@@ -85,22 +113,26 @@ def Regression(self, folder_path):
         p_maxs.append(p_max)
         # print('position', position)
         positions.append(position[0])
-        all_data.append([radius, degree, p_max, position[0]])
+        all_data.append([p_max,all_data_, position[0]])
         print('*' * 10)
     print('make new folder')
     if os.path.exists(r'E:\Software-Duan\Regression_res'):
         pass
     else:
         os.mkdir(r'E:\Software-Duan\Regression_res')
-    data_save = pd.DataFrame(all_data,columns=['radius', 'degree', variable_name+'_max', 'position'])
+    # print('all_data', all_data)
+    data_save = pd.DataFrame(all_data,columns=[variable_name+'_max', 'AllPara','position'])
+    # print('data_save',data_save)
     data_save.to_csv(r'E:\Software-Duan\Regression_res\originInputData.csv',encoding='gb18030')
     print('Save originInputData')
     p_maxs_ = np.array(p_maxs).reshape((len(p_maxs), 1))
-    radiuses_ = np.array(radiuses).reshape((len(radiuses), 1))
-    degrees_ = np.array(degrees).reshape((len(degrees), 1))
-    data = np.concatenate((radiuses_, degrees_, p_maxs_), axis=1)
-    x = data[:, :2]
-    y = data[:, 2]
+    InputPara = np.array([all_data[i][1] for i in range(len(all_data))])[:,para_index]
+    InputParaN = InputParaName[para_index]
+    num_data = len(InputPara)
+    data = np.concatenate((p_maxs_, InputPara), axis=1)
+
+    x = data[:, 1:]
+    y = np.abs(data[:, 0])
     poly_reg = PolynomialFeatures(degree=Degree)  # Quadratic polynomial
     X_ploy = poly_reg.fit_transform(x) # Generate polynomial data
     # max parameter
@@ -132,8 +164,12 @@ def Regression(self, folder_path):
     equation_str = equation_str.replace('_', '')
     equation_str_len = len(equation_str)
     epoch = equation_str_len // len_limited + 1
-    equation_str_new = 'x1:Radius   x2:Angle' + '\n\n'
-    equation_str_new = equation_str_new + 'pmax=' + '\n' + equation_str[:len_limited] + '\n'
+    first_line = ''
+    for tt in range(len(para_index)):
+        first_line = first_line + 'x%d: %s '%(tt, InputParaName[para_index[tt]])
+    equation_str_new = first_line  + '\n\n'
+    # equation_str_new = 'x1:Radius   x2:Angle' + '\n\n'
+    equation_str_new = equation_str_new + '%smax='%variable_name + '\n' + equation_str[:len_limited] + '\n'
     for i in range(1, epoch):
         equation_str_new += equation_str[i * len_limited:(i + 1) * len_limited] + '\n'
     equation_str_new_ = equation_str_new + '\n' + 'MSE=%.3f,RMSE=%.3f,R2=%.3f,MAPE=%.3f' % (MSE, RMSE, R2, MAPE)
@@ -146,8 +182,9 @@ def Regression(self, folder_path):
     self.ui.plotR.figure.clear()  # Clear chart clear fig
     ax = self.ui.plotR.figure.add_subplot(1, 1, 1, label='plot3D')
     data_plot = np.concatenate((data, predict_y.reshape((len(p_maxs), 1))), axis=1)
-    radius = data_plot[:, 0]
+    radius = data_plot[:, 1]
     num = np.sort(list(set(radius)))
+    print('num', num)
     label = ['o', '^', '<', '.', 'x', '+', 's', 'd']
     c_max = 0
     print('Regression 1 ' * 3)
@@ -155,8 +192,8 @@ def Regression(self, folder_path):
         exec('num_%d = np.where(radius==num[%d])[0]' % (i, i))
         data_new = eval(f'data_plot[num_{i}]')  # [raduis,angle,values,values_e]
         x = data_new[:, 3]
-        y = data_new[:, 2]
-        c = np.array(data_new[:, 1] / 10, dtype=int)
+        y = data_new[:, 0]
+        c = np.array(data_new[:, 2]/np.pi*180 / 10, dtype=int)
         if c_max < np.max(c) + 1:
             c_max = np.max(c) + 1
         p = ax.scatter(x, y, marker=label[i], c=c, label=f'Radius={num[i]}')
@@ -166,7 +203,7 @@ def Regression(self, folder_path):
     for size in cbar.ax.get_yticklabels():
         size.set_fontname('Times New Roman')
     cbar.ax.set_yticks(np.arange(c_max))
-    cbar.ax.set_yticklabels(np.arange(c_max) * 10)
+    cbar.ax.set_yticklabels(np.round(np.arange(c_max) * 10/180*np.pi, decimals=2))
     (x_d, x_u) = ax.get_xbound()
     (y_d, y_u) = ax.get_ybound()
     print('Regression 3 ' * 3)
@@ -177,14 +214,17 @@ def Regression(self, folder_path):
     print('Regression 4 ' * 3)
 
     # compute x, y, z
-    x = data[:, :2]
+    x = data[:, 1:]
     y = np.array(positions)[:, 0]
     lin_reg_x = linear_model.LinearRegression()
     lin_reg_x.fit(X_ploy, y)
     predict_y_x = lin_reg_2.predict(X_ploy)
     MSE_x = np.mean((predict_y_x - y) ** 2)
     RMSE_x = np.sqrt(np.mean((predict_y_x - y) ** 2))
-    R2_x = 1 - ((predict_y_x - y) ** 2).sum() / ((y.mean() - y) ** 2).sum()
+    if ((y.mean() - y) ** 2).sum() == 0:
+        R2_x = ((predict_y_x - y) ** 2).sum()
+    else:
+        R2_x = 1 - ((predict_y_x - y) ** 2).sum() / ((y.mean() - y) ** 2).sum()
     print('8*'*5)
     ttt = predict_y_x - y
     print(ttt, y)
@@ -201,14 +241,17 @@ def Regression(self, folder_path):
         var = feature_names_out[i].replace('^', '**').replace(' ', '*')
         equationx = equationx + sy.Float(lin_reg_x.coef_[i], 4) * eval(var)
 
-    x = data[:, :2]
+    x = data[:, 1:]
     y = np.array(positions)[:, 1]
     lin_reg_y = linear_model.LinearRegression()
     lin_reg_y.fit(X_ploy, y)
     predict_y_y = lin_reg_2.predict(X_ploy)
     MSE_y = np.mean((predict_y_y - y) ** 2)
     RMSE_y = np.sqrt(np.mean((predict_y_y - y) ** 2))
-    R2_y = 1 - ((predict_y_y - y) ** 2).sum() / ((y.mean() - y) ** 2).sum()
+    if ((y.mean() - y) ** 2).sum()==0:
+        R2_y = ((predict_y_y - y) ** 2).sum()
+    else:
+        R2_y = 1 - ((predict_y_y - y) ** 2).sum() / ((y.mean() - y) ** 2).sum()
     print('9*' * 5)
     MAPE_y = np.mean(np.divide((predict_y_y - y), y, out=np.zeros_like((predict_y_y - y)), where=y != 0))
     var_n = x.shape[1]
@@ -222,14 +265,17 @@ def Regression(self, folder_path):
         var = feature_names_out[i].replace('^', '**').replace(' ', '*')
         equationy = equationy + sy.Float(lin_reg_y.coef_[i], 4) * eval(var)
 
-    x = data[:, :2]
+    x = data[:, 1:]
     y = np.array(positions)[:, 2]
     lin_reg_z = linear_model.LinearRegression()
     lin_reg_z.fit(X_ploy, y)
     predict_y_z = lin_reg_2.predict(X_ploy)
     MSE_z = np.mean((predict_y_z - y) ** 2)
     RMSE_z = np.sqrt(np.mean((predict_y_z - y) ** 2))
-    R2_z = 1 - ((predict_y_z - y) ** 2).sum() / ((y.mean() - y) ** 2).sum()
+    if ((y.mean() - y) ** 2).sum():
+        R2_z = ((predict_y_z - y) ** 2).sum()
+    else:
+        R2_z = 1 - ((predict_y_z - y) ** 2).sum() / ((y.mean() - y) ** 2).sum()
     print('10*' * 5)
     MAPE_z = np.mean(np.divide((predict_y_z - y), y, out=np.zeros_like((predict_y_z - y)), where=y != 0))
     # MAPE_z = np.mean((predict_y_z - y) / y)
@@ -302,7 +348,7 @@ def ComputeR(self, equation, equation_):
     Angle = float(self.ui.Angle_2.text())
     print('Radius=',Radius,'Angle=',Angle)
     print(equation)
-    p_max = equation.subs({'x_1': Radius, 'x_2': Angle})
+    p_max = np.abs(equation.subs({'x_1': Radius, 'x_2': Angle}))
     x_max = equation_[0].subs({'x_1': Radius, 'x_2': Angle})
     y_max = equation_[1].subs({'x_1': Radius, 'x_2': Angle})
     z_max = equation_[2].subs({'x_1': Radius, 'x_2': Angle})

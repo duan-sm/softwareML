@@ -1639,7 +1639,7 @@ class Ui_Interface(object):
         self.Degree.setPlaceholderText(_translate("Interface", "2"))
         self.label_47.setText(_translate("Interface", "Eqution degree"))
         self.label_53.setText(_translate("Interface", "InputPara Index"))
-        self.InputPara.setPlaceholderText(_translate("Interface", "Example: 12"))
+        self.InputPara.setPlaceholderText(_translate("Interface", "Example: 01"))
         self.Eqution.setText(_translate("Interface", "Equation"))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab_2), _translate("Interface", "Regression "))
         self.menu.setTitle(_translate("Interface", "File(&F)"))
