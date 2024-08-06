@@ -500,11 +500,12 @@ def DrawFig(self):
         # Retrieve the location by length
         o1 = np.where(self.workbook.values[:, 0] < number + length)[0]
         o2 = np.where(self.workbook.values[:, 0] >= number)[0]
-        # print('min=%.3f,max=%.3f' % (o2, o1))
+        print('o2, o1', o2, o1)
         original_position_index = []
         for point in o1:
             if point in o2:
                 original_position_index.append(point)
+        print('original_position_index',original_position_index)
         data_ori = self.workbook.iloc[original_position_index, :]
         x_y_z = data_ori.iloc[:, [0, 1, 2]].values
         x = x_y_z[:, 0]
