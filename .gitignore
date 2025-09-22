@@ -1,2 +1,13 @@
 # Project exclude paths
 /venv/
+
+# Python cache
+__pycache__/
+
+# IDE / Editor folders
+.vscode/
+
+# Data folders
+wall_csv/
+res/
+
