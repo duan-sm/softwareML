@@ -2,6 +2,12 @@
 # coding=utf-8
 
 """
+@Time: 2025/9/19 10:18 AM
+@Author: Fatimah Ahmadi Godini
+@Email: Ahmadi.ths@gmail.com
+@File: _Test.py
+@Software: Visual Studio Code
+
 @Time: 2/12/2024 3:05 PM
 @Author: Shiming Duan
 @Email: 1124682706@qq.com
@@ -17,6 +23,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QBrush
 from PyQt5.QtCore import Qt
 from tensorflow.python.keras.models import load_model
+from tensorflow.python.keras import metrics
+
 
 def rotate_point(x, y, z, angle_degrees):
     '''
@@ -42,6 +50,8 @@ def rotate_point(x, y, z, angle_degrees):
     rotated_point = np.dot(rotation_matrix, original_point)
 
     return rotated_point
+
+
 def LoadParaBtn(self):
     '''
     Select the file window. Select model normalization parameters.
@@ -58,12 +68,13 @@ def LoadParaBtn(self):
         if fname:
             self.ui.ParaTable.clearContents()
             print('fname', fname)
+            self.para_index = "S" if "standard" in fname else "M"
             # open file
             if fname[-3:] == 'csv':
                 filetype = '.csv'
                 self.paraData = pd.read_csv(fname
                                             , encoding='gb18030'
-                                            )
+                                            , index_col=0)
                 self.ui.Results4.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
             elif fname[-3:] == 'lsx':
                 print('3|' * 10)
@@ -153,69 +164,169 @@ def Test(self):
     When the test data is imported and the normalized parameters and corresponding model are selected,
      the second button can be used to test the model.
     '''
-    print('1' * 15)
-    # Load the model under test 
+    
+    input_cols = ['Points_0', 'Points_1', 'Points_2', 'Points_Magnitude']
+    # Load the model under test
+    name = os.path.splitext(os.path.basename(self.model))[0]
+    model_name = name.split('+')[0]
     m = load_model(self.model)
-    data_cols = self.testworkbook.columns
-    # Copy the test data set 
-    ori_test_data = self.testworkbook.values.copy()
-    DimensionlessPara = self.paraData.values.copy()
-    print('2' * 15)
-    # Test data set normalization 
-    DimensionlessType_index = self.ui.DimensionlessType.currentIndex()  #
-    if DimensionlessType_index == 0:
-        test_data = (ori_test_data - DimensionlessPara[0, :]) / np.sqrt(DimensionlessPara[1, :])
-    else:
-        test_data = (ori_test_data - DimensionlessPara[1, :]) / (DimensionlessPara[0, :] - DimensionlessPara[1, :])
-    print('3' * 15)
-    test_data = test_data[:, :4]
+    # Extract test data
+    ori_test_data = self.testworkbook.loc[:, input_cols].to_numpy()
+
+    # Test data normalization
+    if hasattr(self, 'paraData') and self.paraData is not None:
+        # print("columns: ", self.paraData.columns)
+        # print("Index values:", self.paraData.index.tolist())
+        if self.para_index == "S":
+            print('Standard_para')
+            mean = self.paraData.loc['mean', input_cols].to_numpy()
+            var = self.paraData.loc['var', input_cols].to_numpy()
+            test_data = (ori_test_data - mean) / np.sqrt(var)
+        
+        elif self.para_index == "M":
+            print('MaxMin')
+            max_ = self.paraData.loc['max', input_cols].to_numpy()
+            min_ = self.paraData.loc['min', input_cols].to_numpy()
+            test_data = (ori_test_data - min_) / (max_ - min_) 
+        
+    else:  # No normalization applied
+        print('No Normalization')
+        test_data = ori_test_data.copy()
+
     StrePres_t = self.ui.StrePres_t.currentIndex()
     # style = self.ui.Style1.currentIndex()
     if StrePres_t == 0:
-        y_index = np.where('p' == data_cols)[0]
+        cols = ['p']
         print('style=0')
-        print(data_cols)
-        print(y_index)
     else:
-        y_index1 = np.where('wallShearStress_0' == data_cols)[0]
-        y_index2 = np.where('wallShearStress_1' == data_cols)[0]
-        y_index3 = np.where('wallShearStress_2' == data_cols)[0]
-        y_index = np.concatenate((y_index1, y_index2, y_index3))
+        cols = ['NormalStress_0', 'NormalStress_1', 'NormalStress_2',
+                'wallShearStress_0', 'wallShearStress_1', 'wallShearStress_2']
         print('style=1')
-        print(data_cols)
-        print(y_index1, y_index2, y_index3, y_index)
-    print('4' * 15)
-    print('test_data.shape', test_data.shape)
-    results = m(test_data) # Intelligent models predict outcomes 
-    print('4.5' * 15)
-    # The prediction results are reverse-normalized 
-    if DimensionlessType_index == 0:
-        print('DimensionlessType_index=%d' % DimensionlessType_index)
-        print('results.shape, DimensionlessPara.shape')
-        print(results.shape, DimensionlessPara.shape)
-        print('y_index', y_index)
-        print('DimensionlessPara[1,y_index]', DimensionlessPara[1, y_index].shape)
-        results_inv = results * np.sqrt(DimensionlessPara[1, y_index]) + DimensionlessPara[0, y_index]
+
+    if model_name in ['MLP', 'PINN_MLP']:
+        test_input = test_data
+        results_inv = m.predict(test_input)
+        # results_inv = results_inv if isinstance(results_inv, np.ndarray) else results_inv.numpy()
+    elif model_name in ['CNN', 'PINN_CNN', 'LSTM', 'PINN_LSTM']:
+        print(f"Creating sequences for {model_name}")
+        seq_len = 128
+        stride = 64
+        num_points = len(test_data)
+        num_targets = len(cols)
+        pred_sum = np.zeros((num_points, num_targets))
+        pred_count = np.zeros((num_points, 1))
+
+        # Slide window to create sequences
+        for start in range(0, num_points - seq_len + 1, stride):
+            end = start + seq_len
+            seq_input = test_data[start:end]
+            print("seq_input.shape", seq_input.shape)
+            seq_input = np.expand_dims(seq_input, axis=0)  # batch dimension
+            seq_pred = m.predict(seq_input)
+            seq_pred = seq_pred[0]  # remove batch dimension
+            pred_sum[start:end] += seq_pred
+            pred_count[start:end] += 1
+
+        # Handle last window if it doesn't align perfectly
+        if end < num_points:
+            start = num_points - seq_len
+            end = num_points
+            seq_input = test_data[start:end]
+            seq_input = np.expand_dims(seq_input, axis=0)
+            seq_pred = m.predict(seq_input)[0]
+            pred_sum[start:end] += seq_pred
+            pred_count[start:end] += 1
+
+        # Average overlapping predictions
+        results_inv = pred_sum / pred_count
+
     else:
-        print('DimensionlessType_index=%d' % DimensionlessType_index)
-        print('results.shape, DimensionlessPara.shape')
-        print(results.shape, DimensionlessPara.shape)
-        print('DimensionlessPara[1,y_index]', DimensionlessPara[1, y_index].shape)
-        print('y_index', y_index)
-        results_inv = results * (DimensionlessPara[0, y_index] - DimensionlessPara[1, y_index]) + DimensionlessPara[
-            1, y_index]
-    print('5' * 15)
-    ori_test_data[:, y_index] = results_inv
-    results_ = pd.DataFrame(ori_test_data, columns=data_cols) # Save intelligent model results 
-    results_.to_csv(os.getcwd()+r'\res\result\results_new.csv')
-    print('6' * 15)
-    # Add intelligent model predictions to the test set 
+        raise ValueError(f"Unknown model type: {model_name}")
+
+    # The prediction results are reverse-normalized
+    if hasattr(self, 'paraData') and self.paraData is not None:
+        if self.para_index == "S":
+            mean = self.paraData.loc['mean', cols].to_numpy()
+            var = self.paraData.loc['var', cols].to_numpy()
+            results_inv = results_inv * np.sqrt(var) + mean
+        
+        elif self.para_index == "M":
+            max_ = self.paraData.loc['max', cols].to_numpy()
+            min_ = self.paraData.loc['min', cols].to_numpy()
+            results_inv = results_inv * (max_ - min_) + min_
+    
+    # Save original test data + predicted results
+    results_df = self.testworkbook.copy()
+    print("results_inv.shape", results_inv.shape)
+    print("results_df.shape", results_df.shape)
+    for i, col in enumerate(cols):
+        results_df_col = 'Predicted_' + col
+        results_df[results_df_col] = results_inv[:, i] if results_inv.ndim > 1 else results_inv
+
+        self.testworkbook[results_df_col] = results_inv[:, i]
+    
+    # Save to CSV
+    os.makedirs(os.path.join(os.getcwd(), 'res', 'result'), exist_ok=True)
+    try:
+        results_df.to_csv(os.path.join(os.getcwd(), 'res', 'result', 'results_new.csv'), index=False)
+    except Exception as e:
+        print("Error saving CSV:", e)
+
+    
+    # Calculate metrics
+    test_cols = ['Predicted_' + col for col in cols]
+    y_pred = results_df[test_cols]
+    y_test = results_df[cols]
+
     if StrePres_t == 0:
-        self.testworkbook['prediction_p'] = results_inv
+        bp_mse = metrics.MeanSquaredError()(y_test, y_pred).numpy()
+        bp_mae = metrics.MeanAbsoluteError()(y_test, y_pred).numpy()
+        bp_rmse = np.sqrt(bp_mse)
+
+        print('Test Results (Pressure Prediction):')
+        print(f'MSE = {bp_mse:.5f}')
+        print(f'MAE = {bp_mae:.5f}')
+        print(f'RMSE = {bp_rmse:.5f}')
+        
+        metrics_df = pd.DataFrame([{
+            'Model': name,
+            'Component': 'Pressure',
+            'MSE': float(bp_mse),
+            'MAE': float(bp_mae),
+            'RMSE': float(bp_rmse)
+        }])
+        metrics_df.to_csv(f'./res/result/{name}_test_metrics.csv', index=False)
+
     else:
-        self.testworkbook['prediction_stress0'] = results_inv[:, 0]
-        self.testworkbook['prediction_stress1'] = results_inv[:, 1]
-        self.testworkbook['prediction_stress2'] = results_inv[:, 2]
+        metrics_data = []
+        for i in range(y_test.shape[1]):
+            y_true_col = y_test.iloc[:, i].to_numpy()
+            y_pred_col = y_pred.iloc[:, i].to_numpy()
+
+            mse = metrics.MeanSquaredError()(y_true_col, y_pred_col).numpy()
+            mae = metrics.MeanAbsoluteError()(y_true_col, y_pred_col).numpy()
+            rmse = np.sqrt(mse)
+
+            print(f'Test Results for Component {i}:')
+            print(f'  MSE = {mse:.5f}')
+            print(f'  MAE = {mae:.5f}')
+            print(f'  RMSE = {rmse:.5f}')
+            
+            metrics_data.append({
+                'Model': name,
+                'Component': f'Shear_{i}',
+                'MSE': float(mse),
+                'MAE': float(mae),
+                'RMSE': float(rmse)
+            })
+
+        metrics_df = pd.DataFrame(metrics_data)
+        metrics_df.to_csv(f'./res/result/{name}_test_metrics.csv', index=False)
+
+    from _Model import compute_max_ind
+    comparison_pressure = compute_max_ind(results_df[input_cols + cols + test_cols], StrePres_t, name+'_test')
+    print("Comparison Data done")
+
     ########################################################################################
     ########################################################################################
     ########################################################################################
@@ -235,7 +346,7 @@ def DrawSliceT(self):
     self.ui.TestFig.figure.clear()  # clear fig
 
     # index = self.ui.SelectFeature1.currentIndex()
-    print('绘图 begin')
+    print('DrawSlice begin')
     Length_t = float(self.ui.Length_t.text())
     Angle_t = float(self.ui.Angle_t.text())
     StartBent_t = float(self.ui.StartBent_t.text())
@@ -298,24 +409,23 @@ def DrawSliceT(self):
     centre_point_x = StartBent_t
     centre_point_y = 0
     centre_point_z = RadiusBent_t
-    region0_index = np.where(data.values[:, 0] < StartBent_t)[0]
-    region12_index = np.where(data.values[:, 0] >= StartBent_t)[0]
+    region0_index = np.where(data['Points_0'].values < StartBent_t)[0]
+    region12_index = np.where(data['Points_0'].values >= StartBent_t)[0]
     region0_data = data.iloc[region0_index, :]
     region12_data = data.iloc[region12_index, :]
-    region0_data_xyz = region0_data.iloc[:, :3].values.copy()
-    region12_data_xyz = region12_data.iloc[:, :3].values.copy()
+    region0_data_xyz = region0_data.loc[:, ['Points_0', 'Points_1', 'Points_2']].values.copy()
+    region12_data_xyz = region12_data.loc[:, ['Points_0', 'Points_1', 'Points_2']].values.copy()
     # Adjust the origin
     region12_data_xyz[:, 0] = region12_data_xyz[:, 0] - centre_point_x
     region12_data_xyz[:, 2] = region12_data_xyz[:, 2] - centre_point_z
-
+    
     # Convert coordinates
     r = np.sqrt(region12_data_xyz[:, 0] ** 2 + region12_data_xyz[:, 1] ** 2 + region12_data_xyz[:, 2] ** 2)
     theta = np.arccos(region12_data_xyz[:, 2] / r) / np.pi * 180
-    phi = np.arctan(region12_data_xyz[:, 1], region12_data_xyz[:, 0]) / np.pi * 180
-    region12_data['r'] = r
-    region12_data['theta'] = theta  # After adjusting the coordinate system, the angle decreases from 180
-    region12_data['phi'] = phi
-    print(np.sort(list(set(theta))))
+    phi = np.arctan2(region12_data_xyz[:, 1], region12_data_xyz[:, 0]) / np.pi * 180
+
+    region12_data = region12_data.copy().assign(r=r, theta=theta, phi=phi)
+    print('theta: ', np.sort(list(set(theta))))
     # There is a bug in dividing the region
     # region 1 Since only two points on a slice are accurate = theta (these two points are located at the center of the circle and the center line)
     # , the theta of other points is not accurate = 180, so the slice cannot be found
@@ -329,10 +439,11 @@ def DrawSliceT(self):
     centre_point_x2 = StartBent_t + RadiusBent_t * np.sin(Angle_t / 180 * np.pi)
     centre_point_y2 = 0
     centre_point_z2 = RadiusBent_t * (1 - np.cos(Angle_t / 180 * np.pi))
-    region2_data_xyz = region2_data.iloc[:, :3].values.copy()
-    region2_data_xyz[:, 0] = region2_data_xyz[:, 0] - centre_point_x2
-    region2_data_xyz[:, 2] = region2_data_xyz[:, 2] - centre_point_z2
+    region2_data_xyz = region2_data.loc[:, ['Points_0', 'Points_1', 'Points_2']].values.copy()
+    region2_data_xyz[:, 0] -= centre_point_x2
+    region2_data_xyz[:, 2] -= centre_point_z2
     new_point = rotate_point(region2_data_xyz[:, 0], region2_data_xyz[:, 1], region2_data_xyz[:, 2], Angle_t)
+    region2_data = region2_data.copy()
     region2_data['x'] = new_point.T[:, 0]
     region2_data['y'] = new_point.T[:, 1]
     region2_data['z'] = new_point.T[:, 2]
@@ -340,15 +451,15 @@ def DrawSliceT(self):
     # find position
     if Number_t <= StartBent_t:
         print('number<=StartBent_t')
-        o1 = np.where(self.testworkbook.values[:, 0] < Number_t + Length_t)[0]
-        o2 = np.where(self.testworkbook.values[:, 0] >= Number_t)[0]
-        # print('min=%.3f,max=%.3f' % (o2, o1))
+        o1 = np.where(self.testworkbook['Points_0'].values < Number_t + Length_t)[0]
+        o2 = np.where(self.testworkbook['Points_0'].values >= Number_t)[0]
+
         original_position_index = []
         for point in o1:
             if point in o2:
                 original_position_index.append(point)
         data_ori = self.testworkbook.iloc[original_position_index, :]
-        x_y_z = data_ori.iloc[:, [0, 1, 2]].values.copy()
+        x_y_z = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2']].values.copy()
         x = x_y_z[:, 0]
         y = x_y_z[:, 1]
         z = x_y_z[:, 2]
@@ -356,7 +467,8 @@ def DrawSliceT(self):
         azim = 0
 
         if StrePres_t == 0:
-            p = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2', 'p', 'prediction_p']]
+            p = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2', 'p', 'Predicted_p']]
+
             p_y = p.sort_values(by='Points_1', ascending=True).values.copy()
             new_index = []
             new_index_inv = []
@@ -368,10 +480,13 @@ def DrawSliceT(self):
             new_i = np.concatenate((new_index, new_index_inv[::-1]))
             new_i = np.array(new_i, dtype=int)
             p = p_y[new_i, :]
-        else:
-            stress = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2'
-                                         , 'wallShearStress_0', 'wallShearStress_1', 'wallShearStress_2'
-                                         , 'prediction_stress0', 'prediction_stress1', 'prediction_stress2']]
+
+        elif StrePres_t == 1:
+            stress = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2',
+                                      'NormalStress_0', 'NormalStress_1', 'NormalStress_2',
+                                      'wallShearStress_0', 'wallShearStress_1', 'wallShearStress_2',
+                                      'Predicted_NormalStress_0', 'Predicted_NormalStress_1', 'Predicted_NormalStress_2',
+                                      'Predicted_wallShearStress_0', 'Predicted_wallShearStress_1', 'Predicted_wallShearStress_2']]
             stress_y = stress.sort_values(by='Points_1', ascending=True).values.copy()
             new_index = []
             new_index_inv = []
@@ -383,7 +498,8 @@ def DrawSliceT(self):
             new_i = np.concatenate((new_index, new_index_inv[::-1]))
             new_i = np.array(new_i, dtype=int)
             stress = stress_y[new_i, :]
-        z_special = 0
+        z_special = np.mean(p[:,2])
+        print("z_special = ", z_special)
     elif Number_t <= (StartBent_t + np.pi * RadiusBent_t * Angle_t / 180):
         print('number<=(StartBent_t+np.pi*RadiusBent_t*Angle_t/180)')
         remain_len = Number_t - StartBent_t
@@ -396,15 +512,15 @@ def DrawSliceT(self):
         z_min = centre_z - DCircle_t * np.cos(sita) - Length_t / 2
         z_max = centre_z + DCircle_t * np.cos(sita) + Length_t / 2
 
-        o1 = np.where(self.testworkbook.values[:, 0] <= x_max)[0]
-        o2 = np.where(self.testworkbook.values[:, 0] >= x_min)[0]
+        o1 = np.where(self.testworkbook['Points_0'].values <= x_max)[0]
+        o2 = np.where(self.testworkbook['Points_0'].values >= x_min)[0]
         # print('min=%.3f,max=%.3f' % (o2, o1))
         original_position_index1 = []
         for point in o1:
             if point in o2:
                 original_position_index1.append(point)
-        o1 = np.where(self.testworkbook.values[:, 2] <= z_max)[0]
-        o2 = np.where(self.testworkbook.values[:, 2] >= z_min)[0]
+        o1 = np.where(self.testworkbook['Points_2'].values <= z_max)[0]
+        o2 = np.where(self.testworkbook['Points_2'].values >= z_min)[0]
         # print('min=%.3f,max=%.3f' % (o2, o1))
         original_position_index2 = []
         for point in o1:
@@ -415,7 +531,7 @@ def DrawSliceT(self):
             if point in original_position_index2:
                 original_position_index.append(point)
         data_ori = self.testworkbook.iloc[original_position_index, :]
-        data = data_ori.iloc[:, [0, 1, 2]].values.copy()
+        data = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2']].values.copy()
         # position_index = []
         # for aim_point in range(len(data_ori)):
         #     DCircle_2 = ((data[aim_point, 0] - centre_x) ** 2 + (data[aim_point, 1] - centre_y) ** 2
@@ -434,7 +550,7 @@ def DrawSliceT(self):
         azim = 0
 
         if StrePres_t == 0:
-            p = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2', 'p', 'prediction_p']]
+            p = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2', 'p', 'Predicted_p']]
             p_y = p.sort_values(by='Points_1', ascending=True).values.copy()
             new_index = []
             new_index_inv = []
@@ -446,10 +562,12 @@ def DrawSliceT(self):
             new_i = np.concatenate((new_index, new_index_inv[::-1]))
             new_i = np.array(new_i, dtype=int)
             p = p_y[new_i, :]
-        else:
-            stress = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2'
-                                         , 'wallShearStress_0', 'wallShearStress_1', 'wallShearStress_2'
-                                         , 'prediction_stress0', 'prediction_stress1', 'prediction_stress2']]
+        elif StrePres_t == 1:
+            stress = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2',
+                                      'NormalStress_0', 'NormalStress_1', 'NormalStress_2',
+                                      'wallShearStress_0', 'wallShearStress_1', 'wallShearStress_2',
+                                      'Predicted_NormalStress_0', 'Predicted_NormalStress_1', 'Predicted_NormalStress_2',
+                                      'Predicted_wallShearStress_0', 'Predicted_wallShearStress_1', 'Predicted_wallShearStress_2']]
             stress_y = stress.sort_values(by='Points_1', ascending=True).values.copy()
             new_index = []
             new_index_inv = []
@@ -479,7 +597,7 @@ def DrawSliceT(self):
                 original_position_index.append(point)
         original_position_index = region2_data.iloc[original_position_index, :].index
         data_ori = self.testworkbook.iloc[original_position_index, :]
-        x_y_z = data_ori.iloc[:, [0, 1, 2]].values.copy()
+        x_y_z = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2']].values.copy()
         x = x_y_z[:, 0]
         y = x_y_z[:, 1]
         z = x_y_z[:, 2]
@@ -487,7 +605,8 @@ def DrawSliceT(self):
         azim = 0
 
         if StrePres_t == 0:
-            p = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2', 'p', 'prediction_p']]
+            p = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2', 'p', 'Predicted_p']]
+            print(p)
             p_y = p.sort_values(by='Points_1', ascending=True).values.copy()
             new_index = []
             new_index_inv = []
@@ -499,10 +618,13 @@ def DrawSliceT(self):
             new_i = np.concatenate((new_index, new_index_inv[::-1]))
             new_i = np.array(new_i, dtype=int)
             p = p_y[new_i, :]
-        else:
-            stress = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2'
-                                         , 'wallShearStress_0', 'wallShearStress_1', 'wallShearStress_2'
-                                         , 'prediction_stress0', 'prediction_stress1', 'prediction_stress2']]
+            print(p)
+        elif StrePres_t == 1:
+            stress = data_ori.loc[:, ['Points_0', 'Points_1', 'Points_2',
+                                      'NormalStress_0', 'NormalStress_1', 'NormalStress_2',
+                                      'wallShearStress_0', 'wallShearStress_1', 'wallShearStress_2',
+                                      'Predicted_NormalStress_0', 'Predicted_NormalStress_1', 'Predicted_NormalStress_2',
+                                      'Predicted_wallShearStress_0', 'Predicted_wallShearStress_1', 'Predicted_wallShearStress_2']]
             stress_y = stress.sort_values(by='Points_1', ascending=True).values.copy()
             new_index = []
             new_index_inv = []
@@ -520,72 +642,55 @@ def DrawSliceT(self):
     print('number', Number_t)
     print('test')
     ax1 = self.ui.TestFig.figure.add_subplot(1, 1, 1, label='plot3D')
+    print('*1'*10)
+    def safe_arccos(arr):
+        arr = np.clip(arr / np.max(np.abs(arr)), -1.0, 1.0)  # avoid out-of-bounds
+        return np.arccos(arr) / np.pi * 180
+    
     if StrePres_t == 0:
-        diyi_1 = np.where(p[:, 1] < 0)[0]
-        diyi_2 = np.where(p[:, 2] < z_special)[0]
-        index = []
-        for i in diyi_1:
-            if i in diyi_2:
-                index.append(i)
-        x_axis1 = 180 - np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-        diyi_1 = np.where(p[:, 1] > 0)[0]
-        diyi_2 = np.where(p[:, 2] < z_special)[0]
-        index = []
-        for i in diyi_1:
-            if i in diyi_2:
-                index.append(i)
-        x_axis2 = 180 - np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-        diyi_1 = np.where(p[:, 1] > 0)[0]
-        diyi_2 = np.where(p[:, 2] > z_special)[0]
-        index = []
-        for i in diyi_1:
-            if i in diyi_2:
-                index.append(i)
-        x_axis3 = 180 + np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-        diyi_1 = np.where(p[:, 1] < 0)[0]
-        diyi_2 = np.where(p[:, 2] > z_special)[0]
-        index = []
-        for i in diyi_1:
-            if i in diyi_2:
-                index.append(i)
-        x_axis4 = 180 + np.arccos(p[index, 1] / np.max(p[:, 1])) / np.pi * 180
-        x_axis = np.concatenate((x_axis1, x_axis2, x_axis3, x_axis4))
+        print('p 2 '*10)
+        print(p.shape)
+        p = p[:, 1:].astype(float)
+        mask1 = (p[:,1] < 0) & (p[:,2] < z_special)
+        mask2 = (p[:,1] > 0) & (p[:,2] < z_special)
+        mask3 = (p[:,1] > 0) & (p[:,2] > z_special)
+        mask4 = (p[:,1] < 0) & (p[:,2] > z_special)
+        print(p[mask1, 1])
+        print(p[mask2, 1])
+        print(p[mask3, 1])
+        print(p[mask4, 1])
+        x_axis1 = 180 - safe_arccos(p[mask1, 1])
+        x_axis2 = 180 - safe_arccos(p[mask2, 1])
+        x_axis3 = 180 + safe_arccos(p[mask3, 1])
+        x_axis4 = 180 + safe_arccos(p[mask4, 1])
 
         print('000000')
         ax1.scatter(x_axis, p[:, 3], c='b', s=1, label='Pressure CFD')
         ax1.scatter(x_axis, p[:, 4], c='r', s=1, label='Pressure Prediction')
+    
     elif StrePres_t == 1:
-        diyi_1 = np.where(stress[:, 1] < 0)[0]
-        diyi_2 = np.where(stress[:, 2] < z_special)[0]
-        index = []
-        for i in diyi_1:
-            if i in diyi_2:
-                index.append(i)
-        x_axis1 = 180 - np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-        diyi_1 = np.where(stress[:, 1] > 0)[0]
-        diyi_2 = np.where(stress[:, 2] < z_special)[0]
-        index = []
-        for i in diyi_1:
-            if i in diyi_2:
-                index.append(i)
-        x_axis2 = 180 - np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-        diyi_1 = np.where(stress[:, 1] > 0)[0]
-        diyi_2 = np.where(stress[:, 2] > z_special)[0]
-        index = []
-        for i in diyi_1:
-            if i in diyi_2:
-                index.append(i)
-        x_axis3 = 180 + np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
-        diyi_1 = np.where(stress[:, 1] < 0)[0]
-        diyi_2 = np.where(stress[:, 2] > z_special)[0]
-        index = []
-        for i in diyi_1:
-            if i in diyi_2:
-                index.append(i)
-        x_axis4 = 180 + np.arccos(stress[index, 1] / np.max(stress[:, 1])) / np.pi * 180
+        mask1 = (stress['Points_1'].values < 0) & (stress['Points_2'].values < z_special)
+        mask2 = (stress['Points_1'].values > 0) & (stress['Points_2'].values < z_special)
+        mask3 = (stress['Points_1'].values > 0) & (stress['Points_2'].values > z_special)
+        mask4 = (stress['Points_1'].values < 0) & (stress['Points_2'].values > z_special)
+
+        x_axis1 = 180 - safe_arccos(stress.loc[mask1, 'Points_1'].values)
+        x_axis2 = 180 - safe_arccos(stress.loc[mask2, 'Points_1'].values)
+        x_axis3 = 180 + safe_arccos(stress.loc[mask3, 'Points_1'].values)
+        x_axis4 = 180 + safe_arccos(stress.loc[mask4, 'Points_1'].values)
+
         x_axis = np.concatenate((x_axis1, x_axis2, x_axis3, x_axis4))
-        stress_magnitude = np.sqrt(stress[:, 3] ** 2 + stress[:, 4] ** 2 + stress[:, 5] ** 2)
-        prediction_stress_magnitude = np.sqrt(stress[:, 6] ** 2 + stress[:, 7] ** 2 + stress[:, 8] ** 2)
+        
+        stress_magnitude = np.sqrt(
+            stress['wallShearStress_0']**2 +
+            stress['wallShearStress_1']**2 +
+            stress['wallShearStress_2']**2
+        )
+        prediction_stress_magnitude = np.sqrt(
+            stress['Predicted_wallShearStress_0']**2 +
+            stress['Predicted_wallShearStress_1']**2 +
+            stress['Predicted_wallShearStress_2']**2
+        )
         ax1.scatter(x_axis, stress_magnitude, c='b', s=1, label='CFD wallShearStress_magnitude')
         ax1.scatter(x_axis, prediction_stress_magnitude, c='r', s=1, label='Prediction Stress')
         print('*' * 100)

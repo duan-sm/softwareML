@@ -2,6 +2,12 @@
 # coding=utf-8
 
 """
+@Time: 2025/5/12 2:41 PM
+@Author: Fatimah Ahmadi Godini
+@Email: Ahmadi.ths@gmail.com
+@File: _ReadData.py
+@Software: Visual Studio Code
+
 @Time: 10/31/2023 11:38 AM
 @Author: Shiming Duan
 @Email: 1124682706@qq.com
@@ -15,6 +21,8 @@ from PyQt5.QtWidgets import *
 from PyQt5.QtGui import QBrush
 from PyQt5.QtCore import Qt
 import math
+import re
+
 
 def rotate_point(x, y, z, angle_degrees):
     '''
@@ -57,22 +65,11 @@ def DataInputBtn(self):
     # Re-read the data and clear the previous contents
     self.ui.NondimenBtn.setEnabled(True)
     self.ui.DimenComBtn.setEnabled(True)
-    self.ui.NondimenBtn.setEnabled(True)
-    self.ui.FeatureFig.figure.clear()  # Clear Figure
-    self.ui.FeatureFig.figure.clf()
-    # self.ui.FeatureFig.figure.cla()
-    self.ui.OtherFig.figure.clear()  # Clear Figure
-    self.ui.OtherFig.figure.clf()
-    # self.ui.OtherFig.figure.cla()
-    self.ui.FeatureFig2.figure.clear()  # Clear Figure
-    self.ui.FeatureFig2.figure.clf()
-    # self.ui.FeatureFig2.figure.cla()
-    self.ui.Fig3.figure.clear()  # Clear Figure
-    self.ui.Fig3.figure.clf()
-    # self.ui.Fig3.figure.cla()
-    self.ui.LossFig.figure.clear()  # Clear Figure
-    self.ui.LossFig.figure.clf()
-    # self.ui.LossFig.figure.cla()
+    figures = [self.ui.FeatureFig, self.ui.OtherFig, self.ui.FeatureFig2, self.ui.Fig3, self.ui.LossFig]
+    for fig in figures:
+        fig.figure.clear()
+        fig.figure.clf()
+
     self.ui.ResultsText1.clear()
     self.ui.StartWD.setText('0')
     self.ui.EndWD.setText('0')
@@ -80,6 +77,7 @@ def DataInputBtn(self):
     self.ui.EndWD.setEnabled(True)
     self.ui.DataOutlierDraw1.setCheckable(True)
     self.ui.DataOutlierDraw2.setCheckable(False)
+
     self.ui.ResultsText2.setText('It shows here'
                                  ':  Variance results/correlation results/chi-square test results/mutual information results'
                                  '  (Chi-square/HE tests require target features to perform, and other processes do not'
@@ -91,69 +89,66 @@ def DataInputBtn(self):
     # self.ui.DataReplaceBtn2.setEnabled(True)
     self.ui.tabWidget.setTabEnabled(3, True)
     self.Wellname = self.ui.WellName.text()
+    self.workbook = None
+
     self.size_ = 0
     self._DimDialog = None
     self.all_y = None
     self.nondim = 'No'
     self.all_y_index = None
     self.state = -1
-    print('0|' * 10)
-    if self.Wellname == '例：呼111' or self.Wellname == '请输入井号' or self.Wellname == '' or len(self.Wellname)<1:
+    print('    ' + '.' * 15)
+    if not self.Wellname.strip() or self.Wellname in ['例：呼111', '请输入井号']:
         self.ui.WellName.setPlaceholderText('Please input FileName')
         self.ui.Results.setText('Enter the folder name to determine the path for saving subsequent files.')
         return 0
-    # if not os.path.isdir(self.Wellname):
-    #     os.mkdir(self.Wellname)
-    # Example Create a data save path
-    if not os.path.exists(r'./%s'%self.Wellname):
-        os.makedirs(r'./%s'%self.Wellname)
-    # if not os.path.isdir(self.Wellname):
-    #     os.mkdir(self.Wellname)
-    # Open the Select file window
-    fname, _ = QFileDialog.getOpenFileName(self, 'Open file', '.'
-                                           , 'Data file(*.csv *.xlsx *.xls)'
-                                           )
+    os.makedirs(f'./{self.Wellname}', exist_ok=True)
+    print('  ' + '.' * 19)
+    fnames, _ = QFileDialog.getOpenFileNames(self, 'Open files', '.',
+                                             'Data file(*.csv *.xlsx *.xls)')
+
     self.ui.InputDataTableView.clear()
-    print('2|' * 10)
+    print('.' * 23)
     index_col = 0
     try:
-        if fname:
-            self.ui.InputDataTableView.clearContents()
-            print('fname', fname)
-            # Open csv file
-            if fname[-3:]=='csv':
+        for fname in fnames:
+            filename = os.path.basename(fname)
+
+            # Extract angle and radius using regex
+            match = re.findall(r'\d+', filename)
+            if len(match) < 2:
+                self.ui.Results.setText(f"Could not extract angle and radius from {filename}")
+                continue  # Skip files with invalid names
+            radius, angle = int(match[0]), int(match[1])
+            print('.' * 11 + '*' + '.' * 11)
+            print('.' * 9 + '*' * 5 + '.' * 9)
+            if fname.endswith('.csv'):
                 self.filetype = '.csv'
-                self.workbook = pd.read_csv(fname
-                                       ,encoding='gb18030'
-                                       )
-                # print(workbook.iloc[:,0].values)
-                workbook_first_col1 = self.workbook.iloc[:, 0].values == np.arange(len(self.workbook))
-                workbook_first_col2 = self.workbook.iloc[:,0].values == np.arange(1,len(self.workbook)+1)
-                if sum(workbook_first_col1)==len(workbook_first_col1):
-                    self.workbook = self.workbook.iloc[:,1:]
-                elif sum(workbook_first_col2)==len(workbook_first_col2):
-                    self.workbook = self.workbook.iloc[:, 1:]
-                self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
-            elif fname[-3:]=='lsx': # Open xlsx file
-                print('3|' * 10)
-                self.filetype = '.xlsx'
-                self.workbook = pd.read_excel(fname,index_col=index_col)
-                print('4|' * 10)
-                workbook_first_col1 = self.workbook.iloc[:, 0].values == np.arange(len(self.workbook))
-                workbook_first_col2 = self.workbook.iloc[:, 0].values == np.arange(1, len(self.workbook) + 1)
-                print('5|' * 10)
+                self.inputworkbook = pd.read_csv(fname, encoding='gb18030')
+                workbook_first_col1 = self.inputworkbook.iloc[:, 0].values == np.arange(len(self.inputworkbook))
+                workbook_first_col2 = self.inputworkbook.iloc[:, 0].values == np.arange(1, len(self.inputworkbook) + 1)
                 if sum(workbook_first_col1) == len(workbook_first_col1):
-                    workbook = self.workbook.iloc[:, 1:]
+                    self.inputworkbook = self.inputworkbook.iloc[:, 1:]
                 elif sum(workbook_first_col2) == len(workbook_first_col2):
-                    workbook = self.workbook.iloc[:, 1:]
-                self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
-            elif fname[-3:]=='xls':# Open xls file
-                print('3|' * 10)
+                    self.inputworkbook = self.inputworkbook.iloc[:, 1:]
+                # self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
+
+            elif fname.endswith('.lsx'):  # Open xlsx file
                 self.filetype = '.xlsx'
-                self.workbook = pd.read_excel(fname,skiprows=1,sheet_name=0)
-                print('4|' * 10)
-                self.workbook = self.workbook.dropna(axis=0, how='all')
-                col_o = self.workbook.columns
+                self.inputworkbook = pd.read_excel(fname, index_col=index_col)
+                workbook_first_col1 = self.inputworkbook.iloc[:, 0].values == np.arange(len(self.inputworkbook))
+                workbook_first_col2 = self.inputworkbook.iloc[:, 0].values == np.arange(1, len(self.inputworkbook) + 1)
+                if sum(workbook_first_col1) == len(workbook_first_col1):
+                    self.inputworkbook = self.inputworkbook.iloc[:, 1:]
+                elif sum(workbook_first_col2) == len(workbook_first_col2):
+                    self.inputworkbook = self.inputworkbook.iloc[:, 1:]
+                # self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
+
+            elif fname.endswith('.xls'):
+                self.filetype = '.xlsx'
+                self.inputworkbook = pd.read_excel(fname, skiprows=1, sheet_name=0)
+                self.inputworkbook = self.inputworkbook.dropna(axis=0, how='all')
+                col_o = self.inputworkbook.columns
                 col_c = []
                 for i in range(len(col_o)):
                     str_ = ''
@@ -165,51 +160,86 @@ def DataInputBtn(self):
                         col_c.append(new_c)
                     else:
                         col_c.append(new_c[0])
-                print('5|' * 10)
-                self.workbook.columns = col_c
-                self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
+                self.inputworkbook.columns = col_c
+                # self.ui.Results.setText('Open the file:%s. Successful' % (fname.split('/')[-1]))
+
             else:
-                self.ui.Results.setText('The file format should be: xls, csv, xlsx' % (fname.split('/')[-1]))
-            # Get the value of the entire row and column (array)
-            columns = [i.split('\n')[0] for i in self.workbook.columns]
-            print(columns)
-            rows = len(self.workbook)
-            workbook_np = self.workbook.values
-            # print(sheet1.nrows)
-            self.ui.InputDataTableView.setRowCount(rows)
-            self.ui.InputDataTableView.setColumnCount(len(columns))
-            # Set the header in the window
-            for i in range(len(columns)):
-                # print(i)
-                headerItem = QTableWidgetItem(columns[i])
-                font = headerItem.font()
-                ##  font.setBold(True)
-                font.setPointSize(18)
-                headerItem.setFont(font)
-                headerItem.setForeground(QBrush(Qt.red))  # Foreground color, text color
-                self.ui.InputDataTableView.setHorizontalHeaderItem(i, headerItem)
+                self.ui.Results.setText('The file format should be: xls, csv, xlsx' % filename)
+                continue
+            print('.' * 7 + '*' * 9 + '.' * 7)
+            # self.ui.Results.setText(f'Open the file: {filename}. Successful')
 
-            self.ui.InputDataTableView.resizeRowsToContents()
-            self.ui.InputDataTableView.resizeColumnsToContents()
-            # Initializing can select drawn features
-            for num in range(2,5):
-                eval('self.ui.SelectFeature%d.clear()' % num)  # Clear chart
-                eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # Clear chart
+            # Add new columns for angle, radius, and normal stress
+            self.inputworkbook['Angle'] = angle
+            self.inputworkbook['Radius'] = radius
 
-            # # Displays the data in a window
-            for i in range(rows):
-                rowslist = workbook_np[i,:]  # Get the content of each row in Excel
-                # print(rowslist)
-                for j in range(len(rowslist)):
-                    # Adding rows in tablewidget
-                    row = self.ui.InputDataTableView.rowCount()
-                    self.ui.InputDataTableView.insertRow(row)
-                    # Write data into tablewidget
-                    newItem = QTableWidgetItem(str(rowslist[j]))
-                    self.ui.InputDataTableView.setItem(i, j, newItem)
-            self.ui.InputDataTableView.setAlternatingRowColors(True)
-            print(self.size_)
-            print(self.workbook.columns)
+            def compute_normal_stress(data, mu=0.001):
+                u_x = data['U_grad_0'].values.astype(np.float32)
+                v_y = data['U_grad_4'].values.astype(np.float32)
+                w_z = data['U_grad_8'].values.astype(np.float32)
+                p   = data['p'].values.astype(np.float32)
+                normalstress_0 = -p + 2 * mu * u_x
+                normalstress_1 = -p + 2 * mu * v_y
+                normalstress_2 = -p + 2 * mu * w_z
+                return normalstress_0, normalstress_1, normalstress_2
+            
+            self.inputworkbook['NormalStress_0'], self.inputworkbook['NormalStress_1'], self.inputworkbook['NormalStress_2'] = compute_normal_stress(self.inputworkbook, mu=0.001)
+            print("Normal stress computation completed.")
+            
+            if angle == int(self.ui.Angle.text()) and radius == round(float(self.ui.RadiusBent.text())):
+                print('angle: ', angle)
+                print('radius: ', radius)
+                self.workbook0 = self.inputworkbook.copy()
+
+            print('.' * 5 + '*' * 13 + '.' * 5)
+            # Combine multiple files into one DataFrame
+            self.workbook = pd.concat([self.workbook, self.inputworkbook], ignore_index=True) if self.workbook is not None else self.inputworkbook
+
+            print('.' * 3 + '*' * 17 + '.' * 3)
+        self.ui.Results.setText(f'Open all files Successful')
+
+        # Get the value of the entire row and column (array)
+        columns = [i.split('\n')[0] for i in self.workbook0.columns]
+        rows = len(self.workbook0)
+        workbook_np = self.workbook0.values
+        print('.' * 3 + '*' * 17 + '.' * 3)
+        # print(sheet1.nrows)
+        self.ui.InputDataTableView.setRowCount(rows)
+        self.ui.InputDataTableView.setColumnCount(len(columns))
+        print('.' * 5 + '*' * 13 + '.' * 5)
+        # Set the header in the window
+        for i in range(len(columns)):
+            # print(i)
+            headerItem = QTableWidgetItem(columns[i])
+            font = headerItem.font()
+            ##  font.setBold(True)
+            font.setPointSize(18)
+            headerItem.setFont(font)
+            headerItem.setForeground(QBrush(Qt.red))  # Foreground color, text color
+            self.ui.InputDataTableView.setHorizontalHeaderItem(i, headerItem)
+        print('.' * 7 + '*' * 9 + '.' * 7)
+        self.ui.InputDataTableView.resizeRowsToContents()
+        self.ui.InputDataTableView.resizeColumnsToContents()
+        # Initializing can select drawn features
+        for num in range(2, 5):
+            eval('self.ui.SelectFeature%d.clear()' % num)  # Clear chart
+            eval('self.ui.SelectFeature%d.addItems(columns)' % num)  # Clear chart
+        print('.' * 9 + '*' * 5 + '.' * 9)
+        # # Displays the data in a window
+        for i in range(rows):
+            rowslist = workbook_np[i, :]  # Get the content of each row in Excel
+            # print(rowslist)
+            for j in range(len(rowslist)):
+                # Adding rows in tablewidget
+                # row = self.ui.InputDataTableView.rowCount()
+                # self.ui.InputDataTableView.insertRow(row)
+                # Write data into tablewidget
+                newItem = QTableWidgetItem(str(rowslist[j]))
+                self.ui.InputDataTableView.setItem(i, j, newItem)
+        self.ui.InputDataTableView.setAlternatingRowColors(True)
+        print('.' * 11 + '*' + '.' * 11)
+        print(self.size_)
+        print(self.workbook0.columns)
     except:
         self.ui.Results.setText('Something is wrong')
 

@@ -1,5 +1,11 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
+# @Time: 2025/4/2 11:14 AM
+# @Author: Fatimah Ahmadi Godini
+# @Email: Ahmadi.ths@gmail.com
+# @File: software_IntelligenceModel.py
+# @Software: Visual Studio Code
+
 # @Time    : 2022/10/2 10:53
 # @Author  : Shiming Duan
 # @Email   : 1124682706@qq.com
@@ -81,6 +87,9 @@ class MainWindow(QMainWindow):
         self.ui.Model_tab.setCurrentIndex(0)
 
         self.FolderPath=False
+        self.ui.pinn.stateChanged.connect(self.togglePhysicsInputs)
+
+
     # page changed after the prompt page改变后提示
     @pyqtSlot(int)
     def on_tabWidget_currentChanged(self):
@@ -98,45 +107,39 @@ class MainWindow(QMainWindow):
     # Input data 输入数据
     @pyqtSlot(bool)
     def on_DataInputBtn_clicked(self):
-        print('44444adfa dfasdf ')
+        print('DataInputBtn clicked')
         # Read data 读取数据
         DataInputBtn(self=self)
         # Shows the position of the maximum pressure/stress 显示最大压力/应力的位置
         try:
-            print('111')
-            cols = self.workbook.columns
-            values = self.workbook.dropna(axis=0, how='any').values
-            if 'p' in cols:
-                cols_index = np.where('p'==cols)[0]
-            else:
-                cols_index = np.where('wallShearStress_Magnitude'==cols)[0]
-            print('222')
-            print('cols_index',cols_index)
-            val = values[:,cols_index]
+            print('.' * 23)
+            df_clean = self.workbook.dropna(axis=0, how='any').copy()
+            style_index = self.ui.Style0.currentIndex()
+            print(f"Selected Style0 index: {style_index}")
+            if style_index == 0:
+                target_col = 'p'
+            elif style_index == 1:
+                target_col = 'wallShearStress_Magnitude'
+            print('  ' + '.' * 19)
+            val = df_clean[target_col].values
             max_val = np.max(val)
-            print('max_val',max_val)
-            index = np.where(max_val==val)[0][0]
-            print('index', index)
-            print(val.shape)
-            x = values[index, 0]
-            y = values[index, 1]
-            z = values[index, 2]
-            print('x,y,z', x,y,z)
-            print('333')
-            if 'p' in cols:
-                self.ui.max_.setText('MaxPressure: %.4f'%max_val)
-                self.ui.max_x.setText('X: %.4f' % x)
-                self.ui.max_y.setText('Y: %.4f' % y)
-                self.ui.max_z.setText('Z: %.4f' % z)
-                self.ui.Style0.setCurrentIndex(0)
-            else:
-                self.ui.max_.setText('MaxStress: %.4f' % max_val)
-                self.ui.max_x.setText('X: %.4f' % x)
-                self.ui.max_y.setText('Y: %.4f' % y)
-                self.ui.max_z.setText('Z: %.4f' % z)
-                self.ui.Style0.setCurrentIndex(1)
+            index = np.argmax(val)
+            x = df_clean.at[index, 'Points_0']
+            y = df_clean.at[index, 'Points_1']
+            z = df_clean.at[index, 'Points_2']
+            print(f'Max value ({target_col}): {max_val:.4f} at index {index}')
+            print(f'x, y, z = {x}, {y}, {z}')
+            print('    ' + '.' * 15)
+            label = 'MaxPressure' if target_col == 'p' else 'MaxStress'
+            self.ui.max_.setText(f'{label}: {max_val:.4f}')
+            self.ui.max_x.setText(f'X: {x:.4f}')
+            self.ui.max_y.setText(f'Y: {y:.4f}')
+            self.ui.max_z.setText(f'Z: {z:.4f}')
+            self.ui.Style0.setCurrentIndex(0 if target_col == 'p' else 1)
+
             print('444')
-        except:
+        except Exception as e:
+            print(f'Error: {e}')
             self.ui.Results.setText('Please input the data before drawing')
 
 
@@ -491,6 +494,15 @@ class MainWindow(QMainWindow):
     def on_SelectFeature4_currentIndexChanged(self, curText):
         print('SelectFeature4 clicked')
         print(curText)
+
+
+    @pyqtSlot(int)
+    def togglePhysicsInputs(self, state):
+        is_checked = state == 2  # 2 means checked, 0 means unchecked
+        self.ui.physics_weight.setEnabled(is_checked)
+        self.ui.label_63.setEnabled(is_checked)
+        self.ui.mu.setEnabled(is_checked)
+        self.ui.label_25.setEnabled(is_checked)
 
 
     @pyqtSlot(str)

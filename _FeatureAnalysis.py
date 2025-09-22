@@ -2,6 +2,12 @@
 # coding=utf-8
 
 """
+@Time: 2025/9/11 8:35 AM
+@Author: Fatimah Ahmadi Godini
+@Email: Ahmadi.ths@gmail.com
+@File: _FeatureAnalysis.py
+@Software: Visual Studio Code
+
 @Time: 11/1/2023 12:17 PM
 @Author: Shiming Duan
 @Email: 1124682706@qq.com
@@ -179,7 +185,7 @@ def DimenComBtn(self):
     self.ui.DimenComBtn.setEnabled(False)
     self.ui.NondimenBtn.setEnabled(True)
     self.ui.ResultsText2.append('Because it is a regression question, this button is not enable.')
-    return 0
+    
     columns = np.array([i.split('\n')[0] for i in self.workbook.columns])
     if (self._DimDialog == None):  # No dialog box created 
         self._DimDialog = QmyDimenDialog(self, column=columns)
@@ -242,6 +248,7 @@ def DimenComBtn(self):
     else:
         self.ui.ResultsText2.append('Please re-select')
         self.ui.ResultsText2.append('Dimensionality reduction analysis is completed')
+    return 0
 
 def SaveData(self):
     '''
@@ -431,6 +438,12 @@ def NondimenBtn(self, original_data):
         print('DataFrame')
         input_data = original_data.values
         input_data_cols = original_data.columns
+
+        skip_cols_all = ['Block Name', 'Point ID', 'Angle', 'Radius']
+        skip_cols = [c for c in skip_cols_all if c in input_data_cols]
+        normalize_cols = [c for c in input_data_cols if c not in skip_cols]
+        data_to_normalize = original_data[normalize_cols].values
+        data_to_keep = original_data[skip_cols]
     else:
         print('np.ndarray')
     Intermediate_data = []
@@ -439,20 +452,22 @@ def NondimenBtn(self, original_data):
         print('all data is normalization')
         if s_m == 'M':
             print('s_m == M')
-            max_min = MinMaxScaler().fit(input_data)
+            max_min = MinMaxScaler().fit(data_to_normalize)
             self.data_max_ = max_min.data_max_
             self.data_min_ = max_min.data_min_
-            input_data = max_min.transform(input_data)
+            normalized_data  = max_min.transform(data_to_normalize)
             print('self.data_max_, self.data_min_')
             print(self.data_max_, self.data_min_)
+            self.maxmin_para = pd.DataFrame([self.data_max_, self.data_min_], columns=normalize_cols, index=['max', 'min'])
         else:
             print('s_m == S')
-            standard = StandardScaler().fit(input_data)
+            standard = StandardScaler().fit(data_to_normalize)
             self.mean_ = standard.mean_
             self.var_ = standard.var_
-            input_data = standard.transform(input_data)
+            normalized_data  = standard.transform(data_to_normalize)
             print('self.mean_, self.var_')
             print(self.mean_, self.var_)
+            self.standard_para = pd.DataFrame([self.mean_, self.var_], columns=normalize_cols, index=['mean', 'var'])
         # print('NondimenBtn finished')
     else:
         # print('Have Y')
@@ -467,8 +482,9 @@ def NondimenBtn(self, original_data):
         self.ui.tabWidget.setTabEnabled(3, False)
     if isinstance(original_data, pd.core.frame.DataFrame):
         # print('Start save data')
-        input_data = pd.DataFrame(input_data,
-                                  columns=input_data_cols)
+        normalized_df = pd.DataFrame(normalized_data ,
+                                  columns=normalize_cols)
+        input_data = pd.concat([data_to_keep, normalized_df], axis=1)
         # print('input_data')
         # print('./%s/无量纲后的数据.csv')
         input_data.to_csv('./%s/Data after no dimension.csv'%self.Wellname
